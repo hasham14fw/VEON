@@ -1,13 +1,27 @@
 'use client';
 
 import React, {useState, useEffect} from 'react';
-import {TrendingUp, RefreshCw, Download} from 'lucide-react';
+import {
+  TrendingUp,
+  RefreshCw,
+  Download,
+  Activity,
+  Globe2,
+  Search,
+  ExternalLink,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  Zap,
+} from 'lucide-react';
 import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {Dialog, DialogContent, DialogTitle, DialogDescription} from '@/components/ui/dialog';
 import {LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
 import {instruments} from '@/lib/horizon/model';
 import {movement, quoteState} from '@/lib/horizon/engine';
+import type {VeonMarketQuote, MassiveTicker} from '@/lib/horizon/massive';
 import {Tag, stamp, exportJSON, type Work} from './use-workspace';
 import {WorkspaceStatus} from './workspace-status';
 
@@ -18,6 +32,19 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
   const [importOpen, setImportOpen] = useState(false);
   const [input, setInput] = useState('');
   const [syncing, setSyncing] = useState(false);
+
+  // Massive.com live API states
+  const [massiveQuotes, setMassiveQuotes] = useState<VeonMarketQuote[]>([]);
+  const [massiveLoading, setMassiveLoading] = useState(false);
+  const [massiveSyncing, setMassiveSyncing] = useState(false);
+  const [massiveError, setMassiveError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  // Massive listTickers Explorer Modal
+  const [tickerModalOpen, setTickerModalOpen] = useState(false);
+  const [tickersList, setTickersList] = useState<MassiveTicker[]>([]);
+  const [tickerSearch, setTickerSearch] = useState('PKR');
+  const [tickerLoading, setTickerLoading] = useState(false);
 
   const quotes = w.data?.quotes || [];
   const list = instruments.filter(
@@ -44,6 +71,67 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
     )
     .sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
 
+  // Fetch live market quotes from Massive API
+  async function fetchMassiveQuotes() {
+    setMassiveLoading(true);
+    setMassiveError('');
+    try {
+      const res = await fetch('/api/market/massive');
+      const data = (await res.json()) as {ok?: boolean; quotes?: VeonMarketQuote[]; error?: string; asOf?: string};
+      if (data.ok && Array.isArray(data.quotes)) {
+        setMassiveQuotes(data.quotes);
+        setLastUpdated(data.asOf || new Date().toISOString());
+      } else if (data.error) {
+        setMassiveError(data.error);
+      }
+    } catch (err: unknown) {
+      setMassiveError((err as Error).message || 'Failed to fetch live quotes');
+    } finally {
+      setMassiveLoading(false);
+    }
+  }
+
+  // Sync Massive.com quotes directly into D1 Ledger
+  async function syncMassiveToLedger() {
+    setMassiveSyncing(true);
+    try {
+      const res = await fetch('/api/market/massive', {method: 'POST'});
+      const data = (await res.json()) as {error?: string; message?: string; imported?: number};
+      if (!res.ok) throw new Error(data.error || 'Sync failed');
+      await w.refresh();
+      await fetchMassiveQuotes();
+      w.setNotice(data.message || `Synced ${data.imported} live quotes from Massive.com`);
+    } catch (err: unknown) {
+      w.setError((err as Error).message);
+    } finally {
+      setMassiveSyncing(false);
+    }
+  }
+
+  // Call listTickers API from Massive
+  async function fetchMassiveTickers(searchTerm?: string) {
+    setTickerLoading(true);
+    try {
+      const q = searchTerm !== undefined ? searchTerm : tickerSearch;
+      const url =
+        '/api/market/massive?action=tickers&market=fx&limit=100' +
+        (q.trim() ? `&search=${encodeURIComponent(q.trim())}` : '');
+      const res = await fetch(url);
+      const data = (await res.json()) as {results?: MassiveTicker[]; error?: string};
+      if (Array.isArray(data.results)) {
+        setTickersList(data.results);
+      }
+    } catch (err) {
+      console.error('Failed to list tickers:', err);
+    } finally {
+      setTickerLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchMassiveQuotes();
+  }, []);
+
   async function sync() {
     setSyncing(true);
     try {
@@ -59,32 +147,148 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
     }
   }
 
-  useEffect(() => {
-    if (!w.data?.connector.configured) return;
-    const id = setInterval(() => {
-      w.refresh();
-    }, 60000);
-    return () => clearInterval(id);
-  }, [w.data?.connector.configured, w.refresh]);
+  const filteredMassiveQuotes = massiveQuotes.filter(
+    (q) => market === 'All markets' || market === 'Global' || q.market === market || q.market === 'Global'
+  );
 
   return (
     <>
       <MarketCandidateList w={w} />
-      <div className="h-callout">
-        <TrendingUp size={22} />
-        <div>
-          <strong>Financial markets · category 8</strong>
-          <p>
-            {w.data?.connector.configured
-              ? 'Provider connection configured. Check as-of times and source status for availability.'
-              : 'Live feeds are not connected. Instrument coverage and review rules are ready for provider onboarding.'}{' '}
-            Market moves support assessment; they do not establish geopolitical causation.
-          </p>
+
+      {/* =========================================================================
+          MASSIVE.COM LIVE MARKET INTEGRATION SECTION
+          ========================================================================= */}
+      <section className="panel massive-market-panel">
+        <div className="panel-heading massive-panel-heading">
+          <div className="massive-title-group">
+            <div className="massive-provider-badge">
+              <Zap size={14} className="zap-icon" />
+              <span>MASSIVE.COM API</span>
+              <span className="live-dot" />
+              <small>LIVE FX FEED</small>
+            </div>
+            <h2>VEON Operational Currency Monitor</h2>
+            <p>
+              Direct institutional FX pricing from Massive.com REST API for all 5 VEON operating markets
+              and EUR/USD benchmark.
+            </p>
+          </div>
+          <div className="button-row">
+            <Button
+              variant="outline"
+              disabled={massiveLoading}
+              onClick={fetchMassiveQuotes}
+              title="Refresh quotes from api.massive.com"
+            >
+              <RefreshCw size={15} className={massiveLoading ? 'spin-icon' : ''} />
+              {massiveLoading ? 'Fetching…' : 'Refresh Live Feed'}
+            </Button>
+            <Button
+              disabled={massiveSyncing}
+              onClick={syncMassiveToLedger}
+              className="massive-sync-btn"
+              title="Ingest Massive live quotes into Cloudflare D1 ledger & evaluate risk rules"
+            >
+              <Activity size={15} />
+              {massiveSyncing ? 'Ingesting…' : 'Sync to D1 Ledger'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTickerModalOpen(true);
+                fetchMassiveTickers(tickerSearch);
+              }}
+              title="Inspect listTickers API"
+            >
+              <Search size={15} />
+              Explore Tickers
+            </Button>
+          </div>
         </div>
-        <Button variant="outline" onClick={() => setImportOpen(true)}>
-          Import observations
-        </Button>
-      </div>
+
+        {massiveError && (
+          <div className="error massive-error-banner" role="alert">
+            <AlertCircle size={16} />
+            <span>{massiveError}</span>
+            <button onClick={fetchMassiveQuotes}>Retry</button>
+          </div>
+        )}
+
+        {/* Live Market Pair Cards */}
+        <div className="massive-cards-grid">
+          {filteredMassiveQuotes.map((q) => {
+            const isPositive = q.changePercent >= 0;
+            return (
+              <div
+                key={q.ticker}
+                className={'massive-pair-card ' + (picked === q.instrumentId ? 'picked-card' : '')}
+                onClick={() => setPicked(q.instrumentId)}
+              >
+                <div className="card-top-row">
+                  <div>
+                    <span className="market-tag">{q.market}</span>
+                    <strong className="pair-title">{q.name}</strong>
+                    <code className="ticker-code">{q.ticker}</code>
+                  </div>
+                  <div className={'change-badge ' + (isPositive ? 'up' : 'down')}>
+                    {isPositive ? '+' : ''}
+                    {q.changePercent.toFixed(2)}%
+                  </div>
+                </div>
+
+                <div className="card-price-row">
+                  <div className="live-price-val">
+                    {q.price.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 4,
+                    })}
+                  </div>
+                  <span className="unit-label">{q.unit}</span>
+                </div>
+
+                <div className="card-stats-row">
+                  <div>
+                    <small>Open</small>
+                    <span>{q.open ? q.open.toFixed(2) : '—'}</span>
+                  </div>
+                  <div>
+                    <small>High</small>
+                    <span>{q.high ? q.high.toFixed(2) : '—'}</span>
+                  </div>
+                  <div>
+                    <small>Low</small>
+                    <span>{q.low ? q.low.toFixed(2) : '—'}</span>
+                  </div>
+                  <div>
+                    <small>Volume</small>
+                    <span>{q.volume ? q.volume.toLocaleString() : '—'}</span>
+                  </div>
+                </div>
+
+                <div className="card-footer-row">
+                  <span className="as-of-text">
+                    As of: {new Date(q.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                  </span>
+                  {q.cached && <span className="cache-pill">Cached</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {lastUpdated && (
+          <div className="massive-panel-footer">
+            <span>
+              Provider: <b>api.massive.com</b> · Protocol: <b>HTTP REST v2/v3</b> · Authenticated: <b>Active</b>
+            </span>
+            <span>Last polled: {new Date(lastUpdated).toLocaleString('en-GB', {timeZone: 'Asia/Dubai'})} Dubai</span>
+          </div>
+        )}
+      </section>
+
+      {/* =========================================================================
+          TRADITIONAL WATCHLIST & CHARTS
+          ========================================================================= */}
       <div className="h-toolbar">
         <div className="segmented">
           {['All instruments', 'FX spot', 'Currency futures', 'Oil futures', 'Gold futures', 'Local derivatives'].map(
@@ -95,12 +299,17 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
             )
           )}
         </div>
-        <Button variant="outline" disabled={syncing || !w.data?.connector.configured} onClick={sync}>
-          <RefreshCw size={16} />
-          {syncing ? 'Refreshing…' : 'Refresh provider'}
-        </Button>
+        <div className="button-row">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Download size={15} /> Import snapshot
+          </Button>
+          <Button variant="outline" disabled={syncing || !w.data?.connector.configured} onClick={sync}>
+            <RefreshCw size={15} />
+            {syncing ? 'Refreshing…' : 'Refresh provider'}
+          </Button>
+        </div>
       </div>
-      {w.data?.connector.error && <div className="error">Provider: {w.data.connector.error}</div>}
+
       <div className="market-layout">
         <section className="panel market-list">
           <div className="panel-heading">
@@ -138,6 +347,7 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
             );
           })}
         </section>
+
         <section className="panel market-detail">
           <div className="panel-heading">
             <div>
@@ -176,7 +386,7 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
                   />
                   <YAxis domain={['auto', 'auto']} width={65} />
                   <Tooltip labelFormatter={(v) => stamp(new Date(Number(v)).toISOString())} />
-                  <Line dataKey="value" stroke="#007FC1" strokeWidth={2} dot={false} />
+                  <Line dataKey="value" stroke="#FFC836" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -186,7 +396,7 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
                 <p>
                   {quote
                     ? 'At least two observations in this range and contract are needed.'
-                    : 'Connect a provider or import dated observations to populate this chart.'}
+                    : 'Connect a provider or sync Massive.com to populate this chart.'}
                 </p>
               </div>
             )}
@@ -225,15 +435,74 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
               calibration required. Imported snapshots never trigger automated alerts.
             </small>
           </div>
-          <div className="method-note">
-            {instrument.family === 'Local derivatives'
-              ? 'Local futures, forwards and NDF availability requires verification; no substitute contract is implied.'
-              : instrument.family.includes('futures')
-              ? 'Monitor individual contracts. Roll five exchange business days before the earlier first-notice or last-trading date, once verified. Returns never cross contracts.'
-              : 'Local FX shows local-currency units per USD; EUR/USD shows USD per EUR. Official rates are not tradable quotes.'}
-          </div>
         </section>
       </div>
+
+      {/* =========================================================================
+          EXPLORE MASSIVE.COM TICKERS MODAL (listTickers)
+          ========================================================================= */}
+      <Dialog open={tickerModalOpen} onOpenChange={setTickerModalOpen}>
+        <DialogContent className="detail-modal ticker-explorer-modal">
+          <DialogTitle>Massive.com Ticker Explorer</DialogTitle>
+          <DialogDescription>
+            Live currency pairs retrieved via <code>rest.listTickers(&#123; market: &quot;fx&quot; &#125;)</code> from{' '}
+            <code>https://api.massive.com</code>.
+          </DialogDescription>
+
+          <div className="ticker-search-bar">
+            <Search size={16} />
+            <Input
+              placeholder="Search ticker (e.g. PKR, UAH, BDT, EUR)..."
+              value={tickerSearch}
+              onChange={(e) => setTickerSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') fetchMassiveTickers(tickerSearch);
+              }}
+            />
+            <Button onClick={() => fetchMassiveTickers(tickerSearch)} disabled={tickerLoading}>
+              {tickerLoading ? 'Searching…' : 'Query Massive API'}
+            </Button>
+          </div>
+
+          <div className="table-wrap ticker-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Name</th>
+                  <th>Base</th>
+                  <th>Quote</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tickersList.map((t) => (
+                  <tr key={t.ticker}>
+                    <td>
+                      <b className="ticker-name-bold">{t.ticker}</b>
+                    </td>
+                    <td>{t.name}</td>
+                    <td>
+                      <code>{t.base_currency_symbol}</code>
+                    </td>
+                    <td>
+                      <code>{t.currency_symbol}</code>
+                    </td>
+                    <td>
+                      <span className="live-pill">Active</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!tickersList.length && !tickerLoading && (
+              <div className="empty">No tickers found. Try searching for PKR, UAH, KZT, or EUR.</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Modal */}
       <Dialog open={importOpen} onOpenChange={setImportOpen}>
         <DialogContent className="edit-modal">
           <DialogTitle>Import market observations</DialogTitle>

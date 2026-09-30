@@ -1,2 +1,4 @@
 HORIZON_USERNAME="owner"
 HORIZON_PASSWORD="replace-with-a-long-random-password"
+MASSIVE_API_KEY="replace-with-massive-api-key"
+MASSIVE_API_URL="https://api.massive.com"

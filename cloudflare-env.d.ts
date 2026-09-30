@@ -5,4 +5,4 @@ declare namespace Cloudflare {
     ASSETS?: Fetcher;
   }
 }
-declare namespace Cloudflare { interface Env {HORIZON_USERNAME?:string;HORIZON_PASSWORD?:string;} }
+declare namespace Cloudflare { interface Env {HORIZON_USERNAME?:string;HORIZON_PASSWORD?:string;MASSIVE_API_KEY?:string;MASSIVE_API_URL?:string;} }
