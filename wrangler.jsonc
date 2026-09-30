@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "horizon-1440",
+  "main": "worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {"run_worker_first": true, "binding": "ASSETS"},
+  "d1_databases": [{"binding":"DB","database_name":"horizon-1440-db","database_id":"00000000-0000-4000-8000-000000000000","migrations_dir":"drizzle"}]
+}

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1789991723178,
+      "tag": "0000_talented_warhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790588510913,
+      "tag": "0001_previous_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790588700576,
+      "tag": "0002_smooth_skullbuster",
+      "breakpoints": true
+    }
+  ]
+}

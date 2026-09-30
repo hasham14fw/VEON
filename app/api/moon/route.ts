@@ -1,0 +1,13 @@
+import y2026 from '@/public/data/moon-2026.json';
+import y2027 from '@/public/data/moon-2027.json';
+import {readRecord,writeRecord} from '@/lib/horizon/storage';
+import {actor} from '@/lib/horizon/auth';
+import {localDay} from '@/lib/horizon/engine';
+import {z} from 'zod';
+const phaseSchema=z.object({apiversion:z.string(),phasedata:z.array(z.object({year:z.number().int(),month:z.number().int().min(1).max(12),day:z.number().int().min(1).max(31),time:z.string().regex(/^\d{2}:\d{2}$/),phase:z.string()})).min(40)});
+const bundled:Record<number,unknown>={2026:y2026,2027:y2027};
+export async function GET(request:Request){try{actor(request);const url=new URL(request.url),timezone=url.searchParams.get('timezone')||'Asia/Dubai',at=url.searchParams.get('at')||new Date().toISOString();if(!Number.isFinite(Date.parse(at)))throw Error('Invalid date');const day=localDay(at,timezone),year=Number(day.slice(0,4));if(year<1700||year>2100)throw Error('Date outside supported interval');let updated='2026-09-28T09:45:00Z';let cached=false;
+ const years=await Promise.all([year-1,year,year+1].map(async y=>{const old=await readRecord<{payload:unknown;fetchedAt:string}>('moon:'+y);let payload=old?.data.payload??bundled[y];const fresh=old&&Date.now()-Date.parse(old.data.fetchedAt)<7*86400000;
+ if(!fresh){try{const r=await fetch('https://aa.usno.navy.mil/api/moon/phases/year?year='+y,{signal:AbortSignal.timeout(6000)});if(!r.ok)throw Error();const p=phaseSchema.parse(await r.json());if(!p.phasedata.every(x=>x.year===y))throw Error();payload=p;const fetchedAt=new Date().toISOString();await writeRecord('moon:'+y,'moon',{payload:p,fetchedAt},'USNO',old?.version||null,'Ephemeris refreshed');updated=fetchedAt;}catch{cached=true;}}else updated=old.data.fetchedAt;
+ if(!payload)return {year:y,events:[]};const p=phaseSchema.parse(payload);return {year:y,events:p.phasedata.filter(x=>x.phase==='Full Moon').map(x=>`${x.year}-${String(x.month).padStart(2,'0')}-${String(x.day).padStart(2,'0')}T${x.time}:00Z`)};}));
+ const current=years.find(x=>x.year===year);if(!current?.events.length||(day.endsWith('-01-01')&&!years.find(x=>x.year===year-1)?.events.length))return Response.json({available:false,timezone,lastUpdated:null});const events=years.flatMap(x=>x.events).sort();return Response.json({available:true,fullMoon:events.some(x=>localDay(x,timezone)===day),next:events.find(x=>Date.parse(x)>Date.parse(at))||null,timezone,day,source:'US Naval Observatory · API 4.0.1',timeStandard:'USNO Universal Time, mapped to UTC at the supplied one-minute precision',lastUpdated:updated,cached});}catch(e){return Response.json({available:false,error:(e as Error).message},{status:(e as Error).message==='Access denied'?403:400});}}
