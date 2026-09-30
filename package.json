@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:vite": "vite --host 127.0.0.1",
     "build": "next build",
     "build:worker": "vinext build",
     "preview": "node preview.mjs",
