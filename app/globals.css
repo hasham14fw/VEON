@@ -224,40 +224,29 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 
 .login-card {
   width: 100%;
-  max-width: 980px;
+  max-width: 760px;
+  min-height: 440px;
   display: grid;
-  grid-template-columns: 1.12fr 1fr;
-  background: #111522;
-  border: 1px solid rgba(255, 200, 54, 0.28);
-  border-radius: 20px;
+  grid-template-columns: 1fr 1.08fr;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: 
-    0 25px 60px -15px rgba(0, 0, 0, 0.85),
-    0 0 45px rgba(255, 200, 54, 0.12);
-  backdrop-filter: blur(16px);
+    0 25px 50px -12px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
-/* LEFT PANE: BRANDING */
+/* LEFT PANE: BRANDING (White with border) */
 .login-left-pane {
   position: relative;
-  background: linear-gradient(155deg, #0D111A 0%, #151B29 50%, #0A0D14 100%);
-  border-right: 1px solid rgba(255, 200, 54, 0.18);
-  padding: 44px 38px;
+  background: #FFFFFF;
+  border-right: 1px solid #E2E8F0;
+  padding: 36px 32px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
-}
-
-.login-left-bg-pattern {
-  position: absolute;
-  right: -30px;
-  bottom: -40px;
-  width: 380px;
-  height: 380px;
-  background: url('/brand/veon-pattern.svg') center/contain no-repeat;
-  opacity: 0.08;
-  pointer-events: none;
 }
 
 .login-left-content {
@@ -267,139 +256,104 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
   flex-direction: column;
   height: 100%;
   justify-content: space-between;
-  gap: 28px;
+  gap: 22px;
 }
 
 .login-classification-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   width: fit-content;
-  background: rgba(255, 200, 54, 0.1);
-  border: 1px solid rgba(255, 200, 54, 0.28);
-  border-radius: 30px;
-  padding: 5px 13px;
-  font-size: 10px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 1.2px;
-  color: #FFC836;
+  letter-spacing: 1px;
+  color: #92400E;
 }
 
 .pulse-yellow-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #FFC836;
-  box-shadow: 0 0 8px #FFC836;
+  background: #F59E0B;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+.login-brand-center {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .login-logo-wrap {
-  margin: 6px 0 0;
+  margin: 0;
 }
 
 .login-veon-logo {
   display: block;
-  width: 180px;
+  width: 160px;
   height: auto;
-  filter: drop-shadow(0 0 20px rgba(255, 200, 54, 0.35));
 }
 
 .login-title-group {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .login-system-title {
   font-family: Montserrat, "Open Sans", sans-serif;
-  font-size: 28px;
-  line-height: 1.2;
+  font-size: 23px;
+  line-height: 1.25;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
   margin: 0;
 }
 
 .title-veon {
-  color: #FFFFFF;
+  color: #0F172A;
+  font-weight: 800;
 }
 
 .title-highlight {
-  color: #FFC836;
-  text-shadow: 0 0 20px rgba(255, 200, 54, 0.45);
+  color: #D97706;
 }
 
 .title-system {
-  color: #E2E8F0;
-  font-weight: 400;
+  color: #334155;
+  font-weight: 500;
 }
 
 .login-system-sub {
-  font-size: 13px;
-  line-height: 1.55;
-  color: #94A3B8;
-  margin-top: 8px;
-}
-
-.login-features-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 4px 0;
-}
-
-.login-feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: rgba(18, 24, 38, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  padding: 12px 14px;
-}
-
-.feature-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
-  background: rgba(255, 200, 54, 0.12);
-  border: 1px solid rgba(255, 200, 54, 0.3);
-  color: #FFC836;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.login-feature-item strong {
-  display: block;
   font-size: 12px;
-  color: #F1F5F9;
-  font-weight: 600;
+  line-height: 1.5;
+  color: #64748B;
+  margin-top: 6px;
 }
 
-.login-feature-item p {
-  font-size: 11px;
-  color: #8E9DB2;
-  margin-top: 2px;
-  line-height: 1.4;
-}
-
-.login-left-footer {
-  display: flex;
+.login-left-minimal-seal {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   font-size: 11px;
   color: #64748B;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 16px;
+  font-weight: 500;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 14px;
 }
 
-.footer-divider {
-  color: #475569;
+.seal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
 }
 
 /* RIGHT PANE: FORM */
 .login-right-pane {
-  background: #131724;
-  padding: 44px 38px;
+  background: #F8FAFC;
+  padding: 36px 32px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -410,74 +364,80 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 }
 
 .login-form-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .login-lock-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: rgba(255, 200, 54, 0.12);
-  border: 1px solid rgba(255, 200, 54, 0.35);
-  color: #FFC836;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #D97706;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 14px;
-  box-shadow: 0 0 15px rgba(255, 200, 54, 0.2);
+  margin-bottom: 12px;
 }
 
 .login-form-header h2 {
   font-family: Montserrat, "Open Sans", sans-serif;
-  font-size: 22px;
-  font-weight: 600;
-  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0F172A;
   margin: 0;
   letter-spacing: -0.3px;
 }
 
 .login-form-header p {
-  font-size: 13px;
-  color: #8E9DB2;
-  margin-top: 6px;
-  line-height: 1.5;
+  font-size: 12px;
+  color: #64748B;
+  margin-top: 4px;
+  line-height: 1.45;
 }
 
 .login-error-banner {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(220, 38, 38, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #FCA5A5;
-  padding: 12px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 20px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 16px;
 }
 
 .error-icon {
-  color: #EF4444;
+  color: #DC2626;
   flex-shrink: 0;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 15px;
 }
 
 .form-field-group {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .form-field-group label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #CBD5E1;
-  letter-spacing: 0.3px;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .input-wrap {
@@ -488,41 +448,41 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 
 .field-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   color: #64748B;
   pointer-events: none;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 
 .input-wrap:focus-within .field-icon {
-  color: #FFC836;
+  color: #D97706;
 }
 
 .input-wrap input {
   width: 100%;
-  background: #0B0E17 !important;
-  color: #F8FAFC !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  border-radius: 8px;
-  padding: 12px 14px 12px 42px;
-  font-size: 14px;
-  transition: all 0.2s ease;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 6px;
+  padding: 10px 12px 10px 38px;
+  font-size: 13px;
+  transition: all 0.15s ease;
   margin: 0 !important;
 }
 
 .input-wrap input::placeholder {
-  color: #526175;
+  color: #94A3B8;
 }
 
 .input-wrap input:focus {
-  border-color: #FFC836 !important;
-  outline: 2px solid rgba(255, 200, 54, 0.35) !important;
-  box-shadow: 0 0 15px rgba(255, 200, 54, 0.15);
+  border-color: #F59E0B !important;
+  outline: 2px solid rgba(245, 158, 11, 0.25) !important;
+  box-shadow: 0 0 0 1px #F59E0B;
 }
 
 .eye-toggle-btn {
   position: absolute;
-  right: 12px;
+  right: 10px;
   background: transparent;
   border: 0;
   color: #64748B;
@@ -530,82 +490,82 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
+  transition: color 0.15s;
   cursor: pointer;
 }
 
 .eye-toggle-btn:hover {
-  color: #FFC836;
+  color: #0F172A;
 }
 
 .form-options-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .remember-checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #94A3B8;
+  gap: 7px;
+  font-size: 11.5px;
+  color: #475569;
   cursor: pointer;
   user-select: none;
 }
 
 .remember-checkbox-label input[type="checkbox"] {
   accent-color: #FFC836;
-  width: 15px;
-  height: 15px;
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
   cursor: pointer;
 }
 
 .demo-fill-btn {
-  background: transparent;
-  border: 1px dashed rgba(255, 200, 54, 0.45);
-  color: #FFC836;
+  background: #EDF4F9;
+  border: 1px solid #D6E4F0;
+  color: #00408F;
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 3px 8px;
+  border-radius: 5px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .demo-fill-btn:hover {
-  background: rgba(255, 200, 54, 0.12);
-  border-color: #FFC836;
-  color: #FFE082;
+  background: #E1EEF8;
+  border-color: #BDD7EE;
+  color: #002D66;
 }
 
 .login-submit-btn {
-  margin-top: 6px;
+  margin-top: 4px;
   width: 100%;
   background: #FFC836 !important;
-  color: #0A0D14 !important;
-  border: 0 !important;
-  border-radius: 8px;
-  padding: 13px 20px;
+  color: #002D66 !important;
+  border: 1px solid #E6B02E !important;
+  border-radius: 6px;
+  padding: 11px 18px;
   font-family: Montserrat, "Open Sans", sans-serif;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(255, 200, 54, 0.38);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(255, 200, 54, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .login-submit-btn:hover:not(:disabled) {
-  background: #FFD45E !important;
-  box-shadow: 0 6px 28px rgba(255, 200, 54, 0.55);
+  background: #FBBF24 !important;
+  box-shadow: 0 4px 14px rgba(255, 200, 54, 0.45);
   transform: translateY(-1px);
 }
 
@@ -630,51 +590,23 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 }
 
 .login-submit-btn:hover .arrow-icon {
-  transform: translateX(4px);
+  transform: translateX(3px);
 }
 
 .loading-state {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .spinner-icon {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(10, 13, 20, 0.3);
-  border-top-color: #0A0D14;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 45, 102, 0.3);
+  border-top-color: #002D66;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.login-security-notice {
-  margin-top: 24px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: rgba(10, 14, 23, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 11px 14px;
-  color: #71839B;
-}
-
-.login-security-notice svg {
-  color: #FFC836;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.login-security-notice p {
-  font-size: 11px;
-  line-height: 1.45;
-  margin: 0;
 }
 
 .login-bottom-bar {
@@ -683,10 +615,10 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 30px;
+  padding: 12px 24px;
   font-size: 11px;
-  color: #5A6A80;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: #64748B;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* RESPONSIVE DESIGN */

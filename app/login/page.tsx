@@ -2,18 +2,12 @@
 
 import {useState, type FormEvent} from 'react';
 import {
-  Shield,
   Lock,
   User,
   Eye,
   EyeOff,
   ArrowRight,
-  ShieldCheck,
   AlertTriangle,
-  Globe2,
-  Activity,
-  Radio,
-  CheckCircle2,
   Sparkles,
 } from 'lucide-react';
 
@@ -82,9 +76,8 @@ export default function LoginPage() {
       <main className="login-center-container">
         <div className="login-card">
           
-          {/* LEFT PART: Brand, Logo & Name VEON GEO-EW System */}
+          {/* LEFT PART: Brand, Logo & Name VEON GEO-EW System (White with border) */}
           <section className="login-left-pane">
-            <div className="login-left-bg-pattern" />
             <div className="login-left-content">
               {/* Security Classification Pill */}
               <div className="login-classification-pill">
@@ -92,67 +85,34 @@ export default function LoginPage() {
                 <span>RESTRICTED ACCESS · CORPORATE AFFAIRS</span>
               </div>
 
-              {/* VEON Yellow Logo */}
-              <div className="login-logo-wrap">
-                <img
-                  src="/brand/veon-logo-yellow.svg"
-                  alt="VEON"
-                  className="login-veon-logo"
-                  width="220"
-                  height="102"
-                />
-              </div>
-
-              {/* System Title */}
-              <div className="login-title-group">
-                <h1 className="login-system-title">
-                  <span className="title-veon">VEON</span>{' '}
-                  <span className="title-highlight">GEO-EW</span>{' '}
-                  <span className="title-system">System</span>
-                </h1>
-                <p className="login-system-sub">
-                  Geospatial Early-Warning & Geopolitical Risk Intelligence
-                </p>
-              </div>
-
-              {/* Key Capabilities / Markets */}
-              <div className="login-features-list">
-                <div className="login-feature-item">
-                  <div className="feature-icon-box">
-                    <Globe2 size={16} />
-                  </div>
-                  <div>
-                    <strong>Five Operating Markets</strong>
-                    <p>Ukraine (Kyivstar) · Pakistan (Jazz) · Bangladesh · Kazakhstan · Uzbekistan</p>
-                  </div>
+              {/* Center Brand Group */}
+              <div className="login-brand-center">
+                <div className="login-logo-wrap">
+                  <img
+                    src="/brand/veon-logo-yellow.svg"
+                    alt="VEON"
+                    className="login-veon-logo"
+                    width="190"
+                    height="88"
+                  />
                 </div>
 
-                <div className="login-feature-item">
-                  <div className="feature-icon-box">
-                    <Radio size={16} />
-                  </div>
-                  <div>
-                    <strong>Multi-Domain Sensor Gating</strong>
-                    <p>3-Domain Independent Corroboration Engine within 48h</p>
-                  </div>
-                </div>
-
-                <div className="login-feature-item">
-                  <div className="feature-icon-box">
-                    <Activity size={16} />
-                  </div>
-                  <div>
-                    <strong>Continuous Infrastructure Guard</strong>
-                    <p>Substations, fiber landing points, core data centers & macro FX</p>
-                  </div>
+                <div className="login-title-group">
+                  <h1 className="login-system-title">
+                    <span className="title-veon">VEON</span>{' '}
+                    <span className="title-highlight">GEO-EW</span>{' '}
+                    <span className="title-system">System</span>
+                  </h1>
+                  <p className="login-system-sub">
+                    Geospatial Early-Warning & Geopolitical Risk Intelligence
+                  </p>
                 </div>
               </div>
 
-              {/* Left Footer Info */}
-              <div className="login-left-footer">
-                <span>HORIZON 1440 Framework</span>
-                <span className="footer-divider">·</span>
-                <span>Confidential</span>
+              {/* Minimal Brand Seal */}
+              <div className="login-left-minimal-seal">
+                <span className="seal-dot" />
+                <span>Group Intelligence Workspace</span>
               </div>
             </div>
           </section>
@@ -183,7 +143,7 @@ export default function LoginPage() {
                 <div className="form-field-group">
                   <label htmlFor="login-username">Operator Username</label>
                   <div className="input-wrap">
-                    <User size={18} className="field-icon" />
+                    <User size={17} className="field-icon" />
                     <input
                       id="login-username"
                       type="text"
@@ -203,7 +163,7 @@ export default function LoginPage() {
                     <label htmlFor="login-password">Operator Password</label>
                   </div>
                   <div className="input-wrap">
-                    <Lock size={18} className="field-icon" />
+                    <Lock size={17} className="field-icon" />
                     <input
                       id="login-password"
                       type={showPassword ? 'text' : 'password'}
@@ -221,7 +181,7 @@ export default function LoginPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                   </div>
                 </div>
@@ -235,7 +195,7 @@ export default function LoginPage() {
                       onChange={(e) => setRemember(e.target.checked)}
                       disabled={loading}
                     />
-                    <span>Remember this device (30 days)</span>
+                    <span>Remember this device</span>
                   </label>
 
                   <button
@@ -244,7 +204,7 @@ export default function LoginPage() {
                     className="demo-fill-btn"
                     title="Pre-fill default pilot credentials"
                   >
-                    <Sparkles size={14} /> Quick Demo Fill
+                    <Sparkles size={13} /> Quick Fill
                   </button>
                 </div>
 
@@ -262,20 +222,11 @@ export default function LoginPage() {
                   ) : (
                     <span className="btn-content">
                       <span>Authenticate & Enter Workspace</span>
-                      <ArrowRight size={18} className="arrow-icon" />
+                      <ArrowRight size={17} className="arrow-icon" />
                     </span>
                   )}
                 </button>
               </form>
-
-              {/* Security Compliance Footer */}
-              <div className="login-security-notice">
-                <ShieldCheck size={16} />
-                <p>
-                  Protected by Cloudflare Edge Security & Encrypted D1 Ledger. Unauthorized
-                  access attempts are logged and monitored.
-                </p>
-              </div>
             </div>
           </section>
 
