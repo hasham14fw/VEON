@@ -1,4 +1,4 @@
-HORIZON_USERNAME="owner"
+HORIZON_USERNAME="zohair"
 HORIZON_PASSWORD="replace-with-a-long-random-password"
-MASSIVE_API_KEY="replace-with-massive-api-key"
-MASSIVE_API_URL="https://api.massive.com"
+FINNHUB_API_KEY="dauf1k9r01qkvn4pvid0dauf1k9r01qkvn4pvidg"
+FINNHUB_API_URL="https://finnhub.io/api/v1"

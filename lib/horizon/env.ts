@@ -3,6 +3,8 @@
 export interface HorizonEnv {
   HORIZON_USERNAME?: string;
   HORIZON_PASSWORD?: string;
+  FINNHUB_API_KEY?: string;
+  FINNHUB_API_URL?: string;
   MASSIVE_API_KEY?: string;
   MASSIVE_API_URL?: string;
   MARKET_FEED_URL?: string;

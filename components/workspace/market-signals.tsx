@@ -21,7 +21,7 @@ import {Dialog, DialogContent, DialogTitle, DialogDescription} from '@/component
 import {LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
 import {instruments, type Quote} from '@/lib/horizon/model';
 import {movement, quoteState} from '@/lib/horizon/engine';
-import {BENCHMARK_MARKET_QUOTES, type VeonMarketQuote, type MassiveTicker} from '@/lib/horizon/massive';
+import {BENCHMARK_MARKET_QUOTES, type VeonMarketQuote, type FinnhubTicker} from '@/lib/horizon/finnhub';
 import {Tag, stamp, exportJSON, type Work} from './use-workspace';
 import {WorkspaceStatus} from './workspace-status';
 
@@ -33,17 +33,17 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
   const [input, setInput] = useState('');
   const [syncing, setSyncing] = useState(false);
 
-  // Massive.com live API states
-  const [massiveQuotes, setMassiveQuotes] = useState<VeonMarketQuote[]>([]);
-  const [massiveLoading, setMassiveLoading] = useState(false);
-  const [massiveSyncing, setMassiveSyncing] = useState(false);
-  const [massiveError, setMassiveError] = useState('');
+  // Finnhub.io live API states
+  const [finnhubQuotes, setFinnhubQuotes] = useState<VeonMarketQuote[]>([]);
+  const [finnhubLoading, setFinnhubLoading] = useState(false);
+  const [finnhubSyncing, setFinnhubSyncing] = useState(false);
+  const [finnhubError, setFinnhubError] = useState('');
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  // Massive listTickers Explorer Modal
+  // Finnhub listTickers / search Explorer Modal
   const [tickerModalOpen, setTickerModalOpen] = useState(false);
-  const [tickersList, setTickersList] = useState<MassiveTicker[]>([]);
-  const [tickerSearch, setTickerSearch] = useState('PKR');
+  const [tickersList, setTickersList] = useState<FinnhubTicker[]>([]);
+  const [tickerSearch, setTickerSearch] = useState('VEON');
   const [tickerLoading, setTickerLoading] = useState(false);
 
   const quotes = w.data?.quotes || [];
@@ -87,23 +87,23 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
       .sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt))[0];
     if (ledger) return ledger;
 
-    // 2. Check live Massive.com quotes
-    const mq = massiveQuotes.find((m) => m.instrumentId === id);
+    // 2. Check live Finnhub.io quotes
+    const mq = finnhubQuotes.find((m) => m.instrumentId === id);
     if (mq) {
       const prev = mq.open && mq.open > 0 ? mq.open : mq.price - (mq.change || 0);
       return {
-        eventId: `massive-${mq.instrumentId}-${Date.parse(mq.timestamp) || Date.now()}`,
+        eventId: `finnhub-${mq.instrumentId}-${Date.parse(mq.timestamp) || Date.now()}`,
         instrumentId: mq.instrumentId,
         value: mq.price,
         previous: prev,
         fiveSessions: prev,
         hourAgo: prev,
         unit: mq.unit,
-        source: 'Massive.com Live FX',
+        source: mq.source || 'Finnhub.io Live Feed',
         observedAt: mq.timestamp || new Date().toISOString(),
         publishedAt: mq.timestamp || new Date().toISOString(),
         session: 'Open',
-        kind: 'Intraday',
+        kind: mq.source?.includes('Reference') ? 'Reference' : 'Intraday',
         delayMinutes: 0,
         contract: '',
         comparisonContract: '',
@@ -166,58 +166,58 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
 
   const history = rawHistory.length > 1 ? rawHistory : (quote ? generateHistory(quote, days) : []);
 
-  // Fetch live market quotes from Massive API
-  async function fetchMassiveQuotes() {
-    setMassiveLoading(true);
-    setMassiveError('');
+  // Fetch live market quotes from Finnhub API
+  async function fetchFinnhubQuotes() {
+    setFinnhubLoading(true);
+    setFinnhubError('');
     try {
-      const res = await fetch('/api/market/massive');
+      const res = await fetch('/api/market/finnhub');
       const data = (await res.json()) as {ok?: boolean; quotes?: VeonMarketQuote[]; error?: string; asOf?: string};
       if (data.ok && Array.isArray(data.quotes)) {
-        setMassiveQuotes(data.quotes);
+        setFinnhubQuotes(data.quotes);
         setLastUpdated(data.asOf || new Date().toISOString());
         if (quotes.length === 0) {
-          fetch('/api/market/massive', {method: 'POST'})
+          fetch('/api/market/finnhub', {method: 'POST'})
             .then(() => w.refresh())
             .catch(() => {});
         }
       } else if (data.error) {
-        setMassiveError(data.error);
+        setFinnhubError(data.error);
       }
     } catch (err: unknown) {
-      setMassiveError((err as Error).message || 'Failed to fetch live quotes');
+      setFinnhubError((err as Error).message || 'Failed to fetch live quotes');
     } finally {
-      setMassiveLoading(false);
+      setFinnhubLoading(false);
     }
   }
 
-  // Sync Massive.com quotes directly into D1 Ledger
-  async function syncMassiveToLedger() {
-    setMassiveSyncing(true);
+  // Sync Finnhub.io quotes directly into D1 Ledger
+  async function syncFinnhubToLedger() {
+    setFinnhubSyncing(true);
     try {
-      const res = await fetch('/api/market/massive', {method: 'POST'});
+      const res = await fetch('/api/market/finnhub', {method: 'POST'});
       const data = (await res.json()) as {error?: string; message?: string; imported?: number};
       if (!res.ok) throw new Error(data.error || 'Sync failed');
       await w.refresh();
-      await fetchMassiveQuotes();
-      w.setNotice(data.message || `Synced ${data.imported} live quotes from Massive.com`);
+      await fetchFinnhubQuotes();
+      w.setNotice(data.message || `Synced ${data.imported} live quotes from Finnhub.io`);
     } catch (err: unknown) {
       w.setError((err as Error).message);
     } finally {
-      setMassiveSyncing(false);
+      setFinnhubSyncing(false);
     }
   }
 
-  // Call listTickers API from Massive
-  async function fetchMassiveTickers(searchTerm?: string) {
+  // Call listTickers / search API from Finnhub
+  async function fetchFinnhubTickers(searchTerm?: string) {
     setTickerLoading(true);
     try {
       const q = searchTerm !== undefined ? searchTerm : tickerSearch;
       const url =
-        '/api/market/massive?action=tickers&market=fx&limit=100' +
+        '/api/market/finnhub?action=tickers' +
         (q.trim() ? `&search=${encodeURIComponent(q.trim())}` : '');
       const res = await fetch(url);
-      const data = (await res.json()) as {results?: MassiveTicker[]; error?: string};
+      const data = (await res.json()) as {results?: FinnhubTicker[]; error?: string};
       if (Array.isArray(data.results)) {
         setTickersList(data.results);
       }
@@ -229,7 +229,7 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
   }
 
   useEffect(() => {
-    fetchMassiveQuotes();
+    fetchFinnhubQuotes();
   }, []);
 
   async function sync() {
@@ -247,7 +247,7 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
     }
   }
 
-  const filteredMassiveQuotes = massiveQuotes.filter(
+  const filteredFinnhubQuotes = finnhubQuotes.filter(
     (q) => market === 'All markets' || market === 'Global' || q.market === market || q.market === 'Global'
   );
 
@@ -256,49 +256,49 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
       <MarketCandidateList w={w} />
 
       {/* =========================================================================
-          MASSIVE.COM LIVE MARKET INTEGRATION SECTION
+          FINNHUB.IO LIVE MARKET INTEGRATION SECTION
           ========================================================================= */}
       <section className="panel massive-market-panel">
         <div className="panel-heading massive-panel-heading">
           <div className="massive-title-group">
             <div className="massive-provider-badge">
               <Zap size={14} className="zap-icon" />
-              <span>MASSIVE.COM API</span>
+              <span>FINNHUB.IO API</span>
               <span className="live-dot" />
-              <small>LIVE FX FEED</small>
+              <small>LIVE MARKET FEED</small>
             </div>
-            <h2>VEON Operational Currency Monitor</h2>
+            <h2>VEON Operational Market & Currency Monitor</h2>
             <p>
-              Direct institutional FX pricing from Massive.com REST API for all 5 VEON operating markets
-              and EUR/USD benchmark.
+              Direct institutional pricing from Finnhub.io REST API and official central bank fixing rates for
+              all 5 VEON operating markets, commodities, and benchmark indices.
             </p>
           </div>
           <div className="button-row">
             <Button
               variant="outline"
-              disabled={massiveLoading}
-              onClick={fetchMassiveQuotes}
-              title="Refresh quotes from api.massive.com"
+              disabled={finnhubLoading}
+              onClick={fetchFinnhubQuotes}
+              title="Refresh quotes from Finnhub.io"
             >
-              <RefreshCw size={15} className={massiveLoading ? 'spin-icon' : ''} />
-              {massiveLoading ? 'Fetching…' : 'Refresh Live Feed'}
+              <RefreshCw size={15} className={finnhubLoading ? 'spin-icon' : ''} />
+              {finnhubLoading ? 'Fetching…' : 'Refresh Live Feed'}
             </Button>
             <Button
-              disabled={massiveSyncing}
-              onClick={syncMassiveToLedger}
+              disabled={finnhubSyncing}
+              onClick={syncFinnhubToLedger}
               className="massive-sync-btn"
-              title="Ingest Massive live quotes into Cloudflare D1 ledger & evaluate risk rules"
+              title="Ingest Finnhub live quotes into Cloudflare D1 ledger & evaluate risk rules"
             >
               <Activity size={15} />
-              {massiveSyncing ? 'Ingesting…' : 'Sync to D1 Ledger'}
+              {finnhubSyncing ? 'Ingesting…' : 'Sync to D1 Ledger'}
             </Button>
             <Button
               variant="outline"
               onClick={() => {
                 setTickerModalOpen(true);
-                fetchMassiveTickers(tickerSearch);
+                fetchFinnhubTickers(tickerSearch);
               }}
-              title="Inspect listTickers API"
+              title="Inspect Finnhub symbols"
             >
               <Search size={15} />
               Explore Tickers
@@ -306,17 +306,17 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
           </div>
         </div>
 
-        {massiveError && (
+        {finnhubError && (
           <div className="error massive-error-banner" role="alert">
             <AlertCircle size={16} />
-            <span>{massiveError}</span>
-            <button onClick={fetchMassiveQuotes}>Retry</button>
+            <span>{finnhubError}</span>
+            <button onClick={fetchFinnhubQuotes}>Retry</button>
           </div>
         )}
 
         {/* Live Market Pair Cards */}
         <div className="massive-cards-grid">
-          {filteredMassiveQuotes.map((q) => {
+          {filteredFinnhubQuotes.map((q) => {
             const isPositive = q.changePercent >= 0;
             return (
               <div
@@ -452,10 +452,10 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
                 </div>
                 <Tag>
                   {q ? (
-                    q.source?.includes('Massive') ? (
+                    q.source?.includes('Finnhub') ? (
                       <span style={{display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#15803d', fontWeight: 600}}>
                         <span style={{width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block'}} />
-                        Live · Massive
+                        Live · Finnhub
                       </span>
                     ) : q.source?.includes('Reference') ? (
                       <span style={{color: '#00408f', fontWeight: 500}}>Reference Rate</span>
@@ -482,10 +482,10 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
             </div>
             <Tag>
               {quote ? (
-                quote.source?.includes('Massive') ? (
+                quote.source?.includes('Finnhub') ? (
                   <span style={{display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#15803d', fontWeight: 600}}>
                     <span style={{width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block'}} />
-                    Live · Massive Feed
+                    Live · Finnhub Feed
                   </span>
                 ) : (
                   quoteState(quote)
@@ -575,28 +575,28 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
       </div>
 
       {/* =========================================================================
-          EXPLORE MASSIVE.COM TICKERS MODAL (listTickers)
+          EXPLORE FINNHUB.IO TICKERS MODAL
           ========================================================================= */}
       <Dialog open={tickerModalOpen} onOpenChange={setTickerModalOpen}>
         <DialogContent className="detail-modal ticker-explorer-modal">
-          <DialogTitle>Massive.com Ticker Explorer</DialogTitle>
+          <DialogTitle>Finnhub.io Ticker & Asset Explorer</DialogTitle>
           <DialogDescription>
-            Live currency pairs retrieved via <code>rest.listTickers(&#123; market: &quot;fx&quot; &#125;)</code> from{' '}
-            <code>https://api.massive.com</code>.
+            Live market symbols retrieved via <code>finnhub.search(&apos;symbol&apos;)</code> from{' '}
+            <code>https://finnhub.io/api/v1</code>.
           </DialogDescription>
 
           <div className="ticker-search-bar">
             <Search size={16} />
             <Input
-              placeholder="Search ticker (e.g. PKR, UAH, BDT, EUR)..."
+              placeholder="Search ticker (e.g. VEON, GLD, USO, BNO, FXE)..."
               value={tickerSearch}
               onChange={(e) => setTickerSearch(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') fetchMassiveTickers(tickerSearch);
+                if (e.key === 'Enter') fetchFinnhubTickers(tickerSearch);
               }}
             />
-            <Button onClick={() => fetchMassiveTickers(tickerSearch)} disabled={tickerLoading}>
-              {tickerLoading ? 'Searching…' : 'Query Massive API'}
+            <Button onClick={() => fetchFinnhubTickers(tickerSearch)} disabled={tickerLoading}>
+              {tickerLoading ? 'Searching…' : 'Query Finnhub API'}
             </Button>
           </div>
 
