@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.x"
   },
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "vinext build",
+    "dev": "next dev",
+    "build": "next build",
+    "build:worker": "vinext build",
     "preview": "node preview.mjs",
-    "deploy": "wrangler deploy --config dist/server/wrangler.json",
+    "deploy:worker": "wrangler deploy --config dist/server/wrangler.json",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "db:local": "wrangler d1 migrations apply DB --local --config wrangler.jsonc",

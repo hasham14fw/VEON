@@ -1,5 +1,7 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/horizon/env';
 import {z} from 'zod';
+
+export const dynamic = 'force-dynamic';
 import {actor,mutationGuard} from '@/lib/horizon/auth';
 import {quoteSchema,instruments,sourceSeeds,type Source,type Quote} from '@/lib/horizon/model';
 import {readRecord,writeRecord,records} from '@/lib/horizon/storage';

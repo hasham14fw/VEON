@@ -1,5 +1,7 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/horizon/env';
 import {restClient, VEON_FX_MAPPINGS} from '@/lib/horizon/massive';
+
+export const dynamic = 'force-dynamic';
 import {readRecord, writeRecord} from '@/lib/horizon/storage';
 import {marketCondition} from '@/lib/horizon/engine';
 import {type Quote, type Source, sourceSeeds, instruments} from '@/lib/horizon/model';

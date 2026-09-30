@@ -1,6 +1,8 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/horizon/env';
 import {z} from 'zod';
 import {safeCompare, createSessionToken} from '@/lib/horizon/auth';
+
+export const dynamic = 'force-dynamic';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),

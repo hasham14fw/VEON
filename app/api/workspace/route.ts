@@ -1,6 +1,8 @@
 import {z} from 'zod';
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/horizon/env';
 import {database} from '@/db/store';
+
+export const dynamic = 'force-dynamic';
 import {actor,mutationGuard} from '@/lib/horizon/auth';
 import {records,readRecord,writeRecord} from '@/lib/horizon/storage';
 import {assessmentSchema,evidenceSchema,quoteSchema,sourceSeeds,type Assessment,type Evidence,type Alert,type Source,type Brief,type Quote,type MarketCandidate,instruments} from '@/lib/horizon/model';

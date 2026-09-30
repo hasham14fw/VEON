@@ -3,6 +3,7 @@ import {credentials} from './lib/horizon/auth';
 
 export default {
  async fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext) {
+  (globalThis as any).env = env;
   if (!env.HORIZON_USERNAME || !env.HORIZON_PASSWORD) {
    return new Response('Set HORIZON_USERNAME and HORIZON_PASSWORD secrets before using this workspace.', {status: 503});
   }

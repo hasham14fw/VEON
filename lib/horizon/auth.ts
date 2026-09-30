@@ -1,4 +1,4 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/horizon/env';
 
 export function safeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
