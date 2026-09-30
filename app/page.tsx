@@ -20,7 +20,19 @@ export default function Home(){
  const [assessmentId,setAssessmentId]=useState(''),[filters,setFilters]=useState(defaultFilters);
  const [saved,setSaved]=useState<Situation[]>([]),[market,setMarket]=useState('All markets'),[view,setView]=useState('Overview'),[scenario,setScenario]=useState<ScenarioName>('Base'),[query,setQuery]=useState(''),[selected,setSelected]=useState<Situation|null>(null),[editing,setEditing]=useState<Situation|null>(null),[error,setError]=useState(''),[saving,setSaving]=useState(false),[note,setNote]=useState(''),[notice,setNotice]=useState(''),[showExamples,setShowExamples]=useState(true),[cell,setCell]=useState<string|null>(null);
  async function refresh(){try{const r=await fetch('/api/situations');if(!r.ok)throw Error();setSaved(await r.json());setError('');}catch{setError('Saved situations are unavailable. Retry loading; illustrative examples remain available.');}}
- useEffect(()=>{refresh()},[]);
+ useEffect(()=>{
+  async function verifySession(){
+   try{
+    const r=await fetch('/api/auth/me');
+    if(!r.ok){window.location.href='/login';return;}
+   }catch{
+    window.location.href='/login';
+    return;
+   }
+   refresh();
+  }
+  verifySession();
+ },[]);
  const all=[...(showExamples?seed.filter(s=>!saved.some(x=>x.id===s.id)):[]),...saved].filter(s=>showExamples||!s.illustrative);
  const filtered=all.filter(s=>(market==='All markets'||market==='Global'?market==='All markets'||s.scope==='Global':s.markets.includes(market as typeof markets[number]))&&(s.title+' '+s.driver).toLowerCase().includes(query.toLowerCase())).filter(s=>matchesSituation(s,w.data,filters));
  const visible=filtered.filter(s=>!cell||`${s.scenarios[scenario].duration}-${s.scenarios[scenario].severity}`===cell);

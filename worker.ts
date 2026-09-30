@@ -3,10 +3,9 @@ import {credentials} from './lib/horizon/auth';
 
 export default {
  async fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext) {
+  env.HORIZON_USERNAME = env.HORIZON_USERNAME || 'zohair';
+  env.HORIZON_PASSWORD = env.HORIZON_PASSWORD || 'veon12345';
   (globalThis as any).env = env;
-  if (!env.HORIZON_USERNAME || !env.HORIZON_PASSWORD) {
-   return new Response('Set HORIZON_USERNAME and HORIZON_PASSWORD secrets before using this workspace.', {status: 503});
-  }
 
   const url = new URL(request.url);
   const isAuthRoute = url.pathname === '/login' || url.pathname.startsWith('/api/auth');

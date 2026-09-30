@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   return Response.json({
     authenticated: true,
     user: {
-      username: config.HORIZON_USERNAME || 'operator',
+      username: config.HORIZON_USERNAME || 'zohair',
       role: 'Intelligence Operator',
     },
   });

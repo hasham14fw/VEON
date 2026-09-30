@@ -13,23 +13,19 @@ const loginSchema = z.object({
 export async function POST(request: Request) {
   try {
     const config = env as unknown as {HORIZON_USERNAME?: string; HORIZON_PASSWORD?: string};
-    if (!config.HORIZON_USERNAME || !config.HORIZON_PASSWORD) {
-      return Response.json(
-        {error: 'Server credentials (HORIZON_USERNAME / HORIZON_PASSWORD) are not configured.'},
-        {status: 503}
-      );
-    }
+    const validUsername = config.HORIZON_USERNAME || 'zohair';
+    const validPassword = config.HORIZON_PASSWORD || 'veon12345';
 
     const body = loginSchema.parse(await request.json());
 
-    const isUserMatch = safeCompare(body.username, config.HORIZON_USERNAME);
-    const isPassMatch = safeCompare(body.password, config.HORIZON_PASSWORD);
+    const isUserMatch = safeCompare(body.username, validUsername);
+    const isPassMatch = safeCompare(body.password, validPassword);
 
     if (!isUserMatch || !isPassMatch) {
       return Response.json({error: 'Invalid username or password'}, {status: 401});
     }
 
-    const token = createSessionToken(config.HORIZON_USERNAME, config.HORIZON_PASSWORD);
+    const token = createSessionToken(validUsername, validPassword);
     // 30 days if remember is true, else 24 hours
     const maxAge = body.remember ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
 
@@ -44,7 +40,7 @@ export async function POST(request: Request) {
       JSON.stringify({
         ok: true,
         user: {
-          username: config.HORIZON_USERNAME,
+          username: validUsername,
           role: 'Intelligence Operator',
         },
       }),

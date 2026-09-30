@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('zohair');
+  const [password, setPassword] = useState('veon12345');
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -55,8 +55,8 @@ export default function LoginPage() {
   }
 
   function handleFillDemo() {
-    setUsername('owner');
-    setPassword('password123');
+    setUsername('zohair');
+    setPassword('veon12345');
     setError('');
   }
 
@@ -149,7 +149,7 @@ export default function LoginPage() {
                       type="text"
                       required
                       autoComplete="username"
-                      placeholder="Enter username (e.g. owner)"
+                      placeholder="Enter username (e.g. zohair)"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       disabled={loading}
