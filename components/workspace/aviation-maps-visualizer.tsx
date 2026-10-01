@@ -27,6 +27,7 @@ import {
   Navigation,
   Eye,
   Radio,
+  Search,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogTitle, DialogDescription} from '@/components/ui/dialog';
@@ -49,19 +50,21 @@ export interface AviationZoneGeo {
   detourImpactMinutes: number;
   effectiveDate: string;
   riskFactor: number;
+  x: number;
+  y: number;
   svgX: number;
   svgY: number;
   radiusSvg: number;
 }
 
-// Convert Lat/Lon to SVG viewBox (720 x 300) equirectangular coordinates
+// Convert Lat/Lon to SVG equirectangular coordinates
 function geoToSvg(lat: number, lon: number) {
   const x = Math.round((((lon + 180) % 360) * 2) * 10) / 10;
   const y = Math.round(((90 - lat) * (300 / 180)) * 10) / 10;
   return {x, y, svgX: x, svgY: y};
 }
 
-// 7 Active No-Fly Zones with strict RED threat color scheme
+// 7 Active Geopolitical No-Fly Zones in RED
 export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
   {
     id: 'NFZ-UA-01',
@@ -178,160 +181,43 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     rationale:
       'Increased radar surveillance and periodic rocket launch orbital safety corridors. Flights monitored via Atyrau transit gates.',
     detourImpactMinutes: 25,
-    effectiveDate: '2026-01-15 (Periodic activation)',
-    riskFactor: 52,
+    effectiveDate: '2026-02-15 (Periodic Review)',
+    riskFactor: 58,
     ...geoToSvg(47.1, 51.9),
-    radiusSvg: 17,
+    radiusSvg: 18,
   },
   {
     id: 'NFZ-BD-01',
-    name: 'Bay of Bengal & Myanmar Border Buffer',
-    firCode: 'VGHS (Dhaka) / VYYY (Yangon Buffer)',
+    name: 'Bay of Bengal & Myanmar Border Buffer Sector',
+    firCode: 'VGHS (Dhaka) / VYYY (Yangon)',
     lat: 21.5,
     lon: 92.2,
-    radiusKm: 260,
+    radiusKm: 290,
     market: 'Bangladesh',
     status: 'Active Advisory',
     severity: 'Elevated',
-    altitude: 'Below FL260 Advisory',
-    notamReference: 'CAAB NOTAM A0112/26',
+    altitude: 'Below FL260 in Border FIR Overlaps',
+    notamReference: 'CAAB Dhaka Circular A02/26',
     rationale:
-      'Rakhine state border hostilities. Civil traffic transiting Cox’s Bazar instructed to maintain Oceanic corridor waypoints.',
+      'Armed clashes and air activity along the Arakan corridor. Civil departures from Cox’s Bazar follow strict southern vectoring.',
     detourImpactMinutes: 20,
-    effectiveDate: '2024-02-15 (Monitored)',
-    riskFactor: 48,
+    effectiveDate: '2024-03-01 (Continuous Monitoring)',
+    riskFactor: 52,
     ...geoToSvg(21.5, 92.2),
-    radiusSvg: 13,
-  },
-];
-
-// Proper Countries & Cities like Google Maps
-export const WORLD_CITIES = [
-  // Ukraine
-  {name: 'Kyiv', country: 'Ukraine', lat: 50.45, lon: 30.52, type: 'capital', market: 'Ukraine'},
-  {name: 'Kharkiv', country: 'Ukraine', lat: 49.99, lon: 36.23, type: 'major', market: 'Ukraine'},
-  {name: 'Odesa', country: 'Ukraine', lat: 46.48, lon: 30.72, type: 'major', market: 'Ukraine'},
-  {name: 'Lviv', country: 'Ukraine', lat: 49.84, lon: 24.03, type: 'major', market: 'Ukraine'},
-  {name: 'Dnipro', country: 'Ukraine', lat: 48.46, lon: 35.04, type: 'major', market: 'Ukraine'},
-
-  // Kazakhstan
-  {name: 'Astana', country: 'Kazakhstan', lat: 51.17, lon: 71.45, type: 'capital', market: 'Kazakhstan'},
-  {name: 'Almaty', country: 'Kazakhstan', lat: 43.22, lon: 76.85, type: 'major', market: 'Kazakhstan'},
-  {name: 'Shymkent', country: 'Kazakhstan', lat: 42.34, lon: 69.6, type: 'major', market: 'Kazakhstan'},
-  {name: 'Aktau', country: 'Kazakhstan', lat: 43.65, lon: 51.17, type: 'major', market: 'Kazakhstan'},
-  {name: 'Atyrau', country: 'Kazakhstan', lat: 47.12, lon: 51.88, type: 'major', market: 'Kazakhstan'},
-
-  // Uzbekistan
-  {name: 'Tashkent', country: 'Uzbekistan', lat: 41.3, lon: 69.24, type: 'capital', market: 'Uzbekistan'},
-  {name: 'Samarkand', country: 'Uzbekistan', lat: 39.63, lon: 66.97, type: 'major', market: 'Uzbekistan'},
-  {name: 'Bukhara', country: 'Uzbekistan', lat: 39.77, lon: 64.42, type: 'major', market: 'Uzbekistan'},
-  {name: 'Namangan', country: 'Uzbekistan', lat: 40.99, lon: 71.67, type: 'major', market: 'Uzbekistan'},
-
-  // Pakistan
-  {name: 'Islamabad', country: 'Pakistan', lat: 33.68, lon: 73.05, type: 'capital', market: 'Pakistan'},
-  {name: 'Lahore', country: 'Pakistan', lat: 31.52, lon: 74.36, type: 'major', market: 'Pakistan'},
-  {name: 'Karachi', country: 'Pakistan', lat: 24.86, lon: 67.0, type: 'major', market: 'Pakistan'},
-  {name: 'Rawalpindi', country: 'Pakistan', lat: 33.6, lon: 73.04, type: 'major', market: 'Pakistan'},
-  {name: 'Peshawar', country: 'Pakistan', lat: 34.02, lon: 71.52, type: 'major', market: 'Pakistan'},
-  {name: 'Quetta', country: 'Pakistan', lat: 30.18, lon: 66.98, type: 'major', market: 'Pakistan'},
-
-  // Bangladesh
-  {name: 'Dhaka', country: 'Bangladesh', lat: 23.81, lon: 90.41, type: 'capital', market: 'Bangladesh'},
-  {name: 'Chittagong', country: 'Bangladesh', lat: 22.36, lon: 91.78, type: 'major', market: 'Bangladesh'},
-  {name: 'Sylhet', country: 'Bangladesh', lat: 24.89, lon: 91.87, type: 'major', market: 'Bangladesh'},
-  {name: 'Khulna', country: 'Bangladesh', lat: 22.84, lon: 89.54, type: 'major', market: 'Bangladesh'},
-
-  // Key Strategic & Regional Hubs
-  {name: 'Dubai', country: 'UAE', lat: 25.2, lon: 55.27, type: 'major'},
-  {name: 'Abu Dhabi', country: 'UAE', lat: 24.45, lon: 54.38, type: 'capital'},
-  {name: 'Doha', country: 'Qatar', lat: 25.29, lon: 51.53, type: 'capital'},
-  {name: 'Riyadh', country: 'Saudi Arabia', lat: 24.71, lon: 46.68, type: 'capital'},
-  {name: 'Tehran', country: 'Iran', lat: 35.69, lon: 51.39, type: 'capital'},
-  {name: 'Kabul', country: 'Afghanistan', lat: 34.56, lon: 69.21, type: 'capital'},
-  {name: 'Istanbul', country: 'Turkiye', lat: 41.01, lon: 28.98, type: 'major'},
-  {name: 'Ankara', country: 'Turkiye', lat: 39.93, lon: 32.86, type: 'capital'},
-  {name: 'Baku', country: 'Azerbaijan', lat: 40.41, lon: 49.87, type: 'capital'},
-  {name: 'Tbilisi', country: 'Georgia', lat: 41.72, lon: 44.79, type: 'capital'},
-  {name: 'Yerevan', country: 'Armenia', lat: 40.18, lon: 44.51, type: 'capital'},
-  {name: 'New Delhi', country: 'India', lat: 28.61, lon: 77.21, type: 'capital'},
-  {name: 'Mumbai', country: 'India', lat: 19.08, lon: 72.88, type: 'major'},
-  {name: 'London', country: 'UK', lat: 51.51, lon: -0.13, type: 'capital'},
-  {name: 'Warsaw', country: 'Poland', lat: 52.23, lon: 21.01, type: 'capital'},
-  {name: 'Frankfurt', country: 'Germany', lat: 50.11, lon: 8.68, type: 'major'},
-  {name: 'Singapore', country: 'Singapore', lat: 1.35, lon: 103.82, type: 'capital'},
-].map((city) => ({
-  ...city,
-  ...geoToSvg(city.lat, city.lon),
-}));
-
-// Flight corridors with detour waypoints
-export const FLIGHT_CORRIDORS = [
-  {
-    id: 'FL-LHR-TAS',
-    flightNumber: 'HY 202',
-    airline: 'Uzbekistan Airways',
-    from: 'London LHR',
-    to: 'Tashkent TAS',
-    detourMin: 110,
-    avoidedZone: 'Ukraine & Black Sea',
-    points: [
-      geoToSvg(51.5, -0.4),
-      geoToSvg(46.0, 14.5),
-      geoToSvg(41.0, 29.0),
-      geoToSvg(41.5, 44.0),
-      geoToSvg(40.0, 53.0),
-      geoToSvg(41.2, 69.2),
-    ],
-  },
-  {
-    id: 'FL-DXB-ISB',
-    flightNumber: 'EK 614',
-    airline: 'Emirates',
-    from: 'Dubai DXB',
-    to: 'Islamabad ISB',
-    detourMin: 45,
-    avoidedZone: 'Iran & Afghan Corridor',
-    points: [
-      geoToSvg(25.2, 55.3),
-      geoToSvg(23.5, 60.0),
-      geoToSvg(24.8, 67.0),
-      geoToSvg(29.5, 71.0),
-      geoToSvg(33.6, 72.8),
-    ],
-  },
-  {
-    id: 'FL-ALA-IST',
-    flightNumber: 'KC 901',
-    airline: 'Air Astana',
-    from: 'Almaty ALA',
-    to: 'Istanbul IST',
-    detourMin: 85,
-    avoidedZone: 'Black Sea Exclusion Zone',
-    points: [
-      geoToSvg(43.3, 76.9),
-      geoToSvg(44.0, 65.0),
-      geoToSvg(43.5, 52.0),
-      geoToSvg(41.5, 48.0),
-      geoToSvg(41.0, 36.0),
-      geoToSvg(41.2, 28.7),
-    ],
+    radiusSvg: 14,
   },
 ];
 
 export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) {
-  const [activeTab, setActiveTab] = useState<'map' | 'globe' | 'dual'>('map');
-  const [selectedZone, setSelectedZone] = useState<AviationZoneGeo | null>(null);
-  const [showFlightRoutes, setShowFlightRoutes] = useState(true);
-  const [showCities, setShowCities] = useState(true);
-  const [hoveredZoneId, setHoveredZoneId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'google' | 'globe' | 'dual'>('google');
+  const [selectedZone, setSelectedZone] = useState<AviationZoneGeo | null>(GEO_NO_FLY_ZONES[0]);
+  const [modalZone, setModalZone] = useState<AviationZoneGeo | null>(null);
 
-  // Map Zoom & Pan State (Centered initially on Eurasia / VEON Operating Corridor)
-  // Base SVG viewBox: width=720, height=300
-  const [zoom, setZoom] = useState(2.2);
-  const [center, setCenter] = useState({x: 460, y: 105}); // Centered over Ukraine/Caspian/Pakistan
-  const isDraggingMap = useRef(false);
-  const dragStartPos = useRef({x: 0, y: 0});
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  // Google Maps State
+  const [googleMapType, setGoogleMapType] = useState<'m' | 'k' | 'p' | 'h'>('m');
+  const [googleZoom, setGoogleZoom] = useState<number>(6);
+  const [customSearch, setCustomSearch] = useState<string>('');
+  const [searchTarget, setSearchTarget] = useState<string>('49.0,31.3');
 
   // 3D Canvas Globe State
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -352,217 +238,142 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
     });
   }, [market]);
 
-  // Compute current dynamic SVG ViewBox
-  const currentViewBox = useMemo(() => {
-    const w = 720 / zoom;
-    const h = 300 / zoom;
-    const minX = Math.max(0, Math.min(720 - w, center.x - w / 2));
-    const minY = Math.max(0, Math.min(300 - h, center.y - h / 2));
-    return `${minX} ${minY} ${w} ${h}`;
-  }, [zoom, center]);
+  // Focus Google Map on a Specific Threat Theatre or Coordinates
+  const focusOnTheatre = useCallback(
+    (lat: number, lon: number, zoomLevel = 6, zoneId?: string) => {
+      setSearchTarget(`${lat},${lon}`);
+      setGoogleZoom(zoomLevel);
+      if (zoneId) {
+        const found = GEO_NO_FLY_ZONES.find((z) => z.id === zoneId);
+        if (found) setSelectedZone(found);
+      } else {
+        const found = GEO_NO_FLY_ZONES.find((z) => Math.abs(z.lat - lat) < 1 && Math.abs(z.lon - lon) < 1);
+        if (found) setSelectedZone(found);
+      }
 
-  // Mouse Wheel Zoom In / Out on Cursor Pass
-  const handleMapWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const container = mapContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const mouseFracX = (e.clientX - rect.left) / rect.width;
-    const mouseFracY = (e.clientY - rect.top) / rect.height;
-
-    const zoomDelta = e.deltaY < 0 ? 1.25 : 0.8;
-    setZoom((prevZoom) => {
-      const nextZoom = Math.max(1, Math.min(8.5, prevZoom * zoomDelta));
-
-      // Re-center around cursor point
-      setCenter((prevCenter) => {
-        if (nextZoom === 1) return {x: 360, y: 150};
-        const prevW = 720 / prevZoom;
-        const prevH = 300 / prevZoom;
-        const cursorSvgX = prevCenter.x - prevW / 2 + mouseFracX * prevW;
-        const cursorSvgY = prevCenter.y - prevH / 2 + mouseFracY * prevH;
-
-        const nextW = 720 / nextZoom;
-        const nextH = 300 / nextZoom;
-        const nextCenterX = cursorSvgX + (0.5 - mouseFracX) * nextW;
-        const nextCenterY = cursorSvgY + (0.5 - mouseFracY) * nextH;
-
-        return {
-          x: Math.max(nextW / 2, Math.min(720 - nextW / 2, nextCenterX)),
-          y: Math.max(nextH / 2, Math.min(300 - nextH / 2, nextCenterY)),
-        };
-      });
-
-      return nextZoom;
-    });
-  };
-
-  // Map Drag-to-Pan Handlers
-  const handleMapMouseDown = (e: React.MouseEvent) => {
-    isDraggingMap.current = true;
-    dragStartPos.current = {x: e.clientX, y: e.clientY};
-  };
-
-  const handleMapMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingMap.current) return;
-    const dx = e.clientX - dragStartPos.current.x;
-    const dy = e.clientY - dragStartPos.current.y;
-    dragStartPos.current = {x: e.clientX, y: e.clientY};
-
-    const container = mapContainerRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-
-    // Map screen pixel delta to SVG coordinate delta
-    const svgDeltaX = (dx / rect.width) * (720 / zoom);
-    const svgDeltaY = (dy / rect.height) * (300 / zoom);
-
-    setCenter((prev) => {
-      const w = 720 / zoom;
-      const h = 300 / zoom;
-      return {
-        x: Math.max(w / 2, Math.min(720 - w / 2, prev.x - svgDeltaX)),
-        y: Math.max(h / 2, Math.min(300 - h / 2, prev.y - svgDeltaY)),
+      // Also orient 3D Globe
+      rotationRef.current = {
+        x: (lat * Math.PI) / 180,
+        y: -lon,
       };
-    });
-  };
+      setGlobeZoom(1.35);
+    },
+    []
+  );
 
-  const handleMapMouseUp = () => {
-    isDraggingMap.current = false;
-  };
-
-  // Focus on Specific Regional Theatre
-  const focusOnTheatre = useCallback((lat: number, lon: number, zoomLevel = 3.6) => {
-    const pt = geoToSvg(lat, lon);
-    setCenter(pt);
-    setZoom(zoomLevel);
-
-    // Also orient 3D Globe
+  // Focus on Selected Zone
+  const handleSelectZone = (zone: AviationZoneGeo) => {
+    setSelectedZone(zone);
+    setSearchTarget(`${zone.lat},${zone.lon}`);
+    setGoogleZoom(6);
     rotationRef.current = {
-      x: (lat * Math.PI) / 180,
-      y: -lon,
+      x: (zone.lat * Math.PI) / 180,
+      y: -zone.lon,
     };
-    setGlobeZoom(1.35);
-  }, []);
+  };
 
-  // 3D Globe Render Loop with Glowing Red No-Fly Zones
+  // Google Maps Search Submit
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customSearch.trim()) return;
+    setSearchTarget(encodeURIComponent(customSearch.trim()));
+    setGoogleZoom(7);
+  };
+
+  // 3D Globe Render Loop
   useEffect(() => {
-    if (activeTab === 'map') return;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || activeTab === 'google') return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    let width = (canvas.width = canvas.parentElement?.clientWidth || 700);
+    let height = (canvas.height = canvas.parentElement?.clientHeight || 540);
+
+    const handleResize = () => {
+      if (!canvas.parentElement) return;
+      width = canvas.width = canvas.parentElement.clientWidth;
+      height = canvas.height = canvas.parentElement.clientHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
     let pulsePhase = 0;
 
-    const renderGlobe = () => {
-      const width = canvas.width;
-      const height = canvas.height;
-      ctx.clearRect(0, 0, width, height);
+    const project = (lat: number, lon: number) => {
+      const phi = (lat * Math.PI) / 180;
+      const theta = ((lon + rotationRef.current.y) * Math.PI) / 180;
+      const rotX = rotationRef.current.x;
 
+      const x0 = Math.cos(phi) * Math.sin(theta);
+      const y0 = Math.sin(phi);
+      const z0 = Math.cos(phi) * Math.cos(theta);
+
+      const y1 = y0 * Math.cos(rotX) - z0 * Math.sin(rotX);
+      const z1 = y0 * Math.sin(rotX) + z0 * Math.cos(rotX);
+
+      const R = Math.min(width, height) * 0.38 * globeZoom;
       const cx = width / 2;
       const cy = height / 2;
-      const R = Math.min(width, height) * 0.42 * globeZoom;
+
+      return {
+        x: cx + x0 * R,
+        y: cy - y1 * R,
+        visible: z1 > 0,
+        depth: z1,
+      };
+    };
+
+    const renderGlobe = () => {
+      ctx.clearRect(0, 0, width, height);
 
       if (autoRotate && !isDraggingGlobe.current) {
-        rotationRef.current.y += 0.25;
+        rotationRef.current.y += 0.22;
       }
-      pulsePhase += 0.045;
+      pulsePhase += 0.05;
 
-      const rotX = rotationRef.current.x;
-      const rotY = (rotationRef.current.y * Math.PI) / 180;
+      const R = Math.min(width, height) * 0.38 * globeZoom;
+      const cx = width / 2;
+      const cy = height / 2;
 
-      // 1. Atmosphere Radial Glow
-      const atmoGrad = ctx.createRadialGradient(cx, cy, R * 0.85, cx, cy, R * 1.25);
-      atmoGrad.addColorStop(0, 'rgba(239, 68, 68, 0.22)');
-      atmoGrad.addColorStop(0.5, 'rgba(2, 132, 199, 0.1)');
-      atmoGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = atmoGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R * 1.25, 0, Math.PI * 2);
-      ctx.fill();
+      // Space Background
+      ctx.fillStyle = '#060B14';
+      ctx.fillRect(0, 0, width, height);
 
-      // 2. Base Earth Sphere
-      const oceanGrad = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, R * 0.1, cx, cy, R);
-      oceanGrad.addColorStop(0, '#1E293B');
-      oceanGrad.addColorStop(0.65, '#0F172A');
-      oceanGrad.addColorStop(1, '#050B14');
+      // Globe Ocean Gradient
+      const oceanGrad = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
+      oceanGrad.addColorStop(0, '#0F2744');
+      oceanGrad.addColorStop(0.7, '#071626');
+      oceanGrad.addColorStop(1, '#030A12');
       ctx.fillStyle = oceanGrad;
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
       ctx.fill();
 
-      // Glowing Sphere Border
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
-      ctx.lineWidth = 1.5;
+      // Atmospheric Atmosphere Halo
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      ctx.lineWidth = 3;
       ctx.stroke();
 
-      // 3D Projection Helper
-      const project = (latDeg: number, lonDeg: number) => {
-        const phi = (latDeg * Math.PI) / 180;
-        const theta = (lonDeg * Math.PI) / 180 + rotY;
-        const x3d = R * Math.cos(phi) * Math.sin(theta);
-        const y3d = -R * Math.sin(phi);
-        const z3d = R * Math.cos(phi) * Math.cos(theta);
-        const yRot = y3d * Math.cos(rotX) - z3d * Math.sin(rotX);
-        const zRot = y3d * Math.sin(rotX) + z3d * Math.cos(rotX);
-        return {
-          x: cx + x3d,
-          y: cy + yRot,
-          visible: zRot > -R * 0.05,
-          depth: zRot / R,
-        };
-      };
-
-      // Graticule Lines
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+      // Graticule Latitude/Longitude Lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.lineWidth = 0.8;
-      for (const lat of [-60, -30, 0, 30, 60]) {
+      for (let lat = -60; lat <= 60; lat += 30) {
         ctx.beginPath();
-        let first = true;
-        for (let lon = -180; lon <= 180; lon += 6) {
+        let drawn = false;
+        for (let lon = -180; lon <= 180; lon += 5) {
           const pt = project(lat, lon);
           if (pt.visible) {
-            if (first) {
+            if (!drawn) {
               ctx.moveTo(pt.x, pt.y);
-              first = false;
+              drawn = true;
             } else {
               ctx.lineTo(pt.x, pt.y);
             }
           } else {
-            first = true;
+            drawn = false;
           }
         }
         ctx.stroke();
-      }
-
-      // Draw Flight Corridors on 3D Globe
-      if (showFlightRoutes) {
-        FLIGHT_CORRIDORS.forEach((corr) => {
-          ctx.beginPath();
-          let drawn = false;
-          corr.points.forEach((wp) => {
-            const lon = (wp.x / 2) - 180;
-            const lat = 90 - (wp.y / (300 / 180));
-            const pt = project(lat, lon);
-            if (pt.visible) {
-              if (!drawn) {
-                ctx.moveTo(pt.x, pt.y);
-                drawn = true;
-              } else {
-                ctx.lineTo(pt.x, pt.y);
-              }
-            } else {
-              drawn = false;
-            }
-          });
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
-          ctx.lineWidth = 1.8;
-          ctx.setLineDash([4, 4]);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        });
       }
 
       // RED NO-FLY ZONES ON 3D GLOBE
@@ -570,7 +381,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         const pt = project(zone.lat, zone.lon);
         if (!pt.visible || pt.depth <= -0.1) return;
 
-        const isHovered = hoveredZoneId === zone.id || selectedZone?.id === zone.id;
+        const isSelected = selectedZone?.id === zone.id;
         const scaleFactor = Math.max(0.4, 0.6 + pt.depth * 0.5);
 
         // Animated Red Threat Radius Ring
@@ -578,14 +389,14 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, currentPulseRadius, 0, Math.PI * 2);
         ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = isHovered ? 2.8 : 1.5;
-        ctx.fillStyle = isHovered ? 'rgba(239, 68, 68, 0.45)' : 'rgba(239, 68, 68, 0.22)';
+        ctx.lineWidth = isSelected ? 3 : 1.5;
+        ctx.fillStyle = isSelected ? 'rgba(239, 68, 68, 0.45)' : 'rgba(239, 68, 68, 0.22)';
         ctx.fill();
         ctx.stroke();
 
         // Core Red Threat Epicenter
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 4.5 * scaleFactor, 0, Math.PI * 2);
+        ctx.arc(pt.x, pt.y, 5 * scaleFactor, 0, Math.PI * 2);
         ctx.fillStyle = '#DC2626';
         ctx.fill();
 
@@ -595,22 +406,12 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         ctx.fill();
 
         // Red Zone ID Tag
-        if (pt.depth > 0.2 || isHovered) {
+        if (pt.depth > 0.2 || isSelected) {
           ctx.fillStyle = '#FFFFFF';
-          ctx.font = isHovered ? 'bold 11px Inter, sans-serif' : '10px Inter, sans-serif';
+          ctx.font = isSelected ? 'bold 11px Inter, sans-serif' : '10px Inter, sans-serif';
           ctx.fillText(zone.id, pt.x + 8, pt.y + 3);
         }
       });
-
-      // Sphere Specular Gloss
-      const glossGrad = ctx.createLinearGradient(cx - R * 0.8, cy - R * 0.8, cx + R * 0.4, cy + R * 0.4);
-      glossGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-      glossGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.04)');
-      glossGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = glossGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.fill();
 
       animFrameRef.current = requestAnimationFrame(renderGlobe);
     };
@@ -618,9 +419,12 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
     renderGlobe();
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [activeTab, autoRotate, globeZoom, displayedZones, showFlightRoutes, hoveredZoneId, selectedZone]);
+  }, [activeTab, autoRotate, globeZoom, displayedZones, selectedZone]);
+
+  const activeZone = selectedZone || displayedZones[0];
 
   return (
     <div className="maps-visualizer-container">
@@ -629,25 +433,21 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         <div className="maps-title-wrap">
           <div className="maps-badge">
             <span className="radar-live-dot" />
-            <span>INTERACTIVE AIRSPACE NO-FLY VISUALIZER</span>
+            <span>GOOGLE MAPS // AIRSPACE NO-FLY VISUALIZER</span>
           </div>
-          <h1>Tactical Airspace Map & 3D Globe</h1>
-          <p>
-            High-fidelity geospatial intelligence featuring proper sovereign boundaries, cities, road networks, and
-            highlighted <strong>RED exclusion zones</strong> with cursor-pass mouse-wheel zooming.
-          </p>
+          <h1>Google Maps Airspace Intelligence</h1>
         </div>
 
-        {/* View Switcher: Interactive Map | 3D Globe | Dual View */}
+        {/* View Switcher: Google Maps | 3D Globe | Dual View */}
         <div className="maps-control-cluster">
           <div className="view-mode-toggle">
             <button
               type="button"
-              className={activeTab === 'map' ? 'active' : ''}
-              onClick={() => setActiveTab('map')}
+              className={activeTab === 'google' ? 'active' : ''}
+              onClick={() => setActiveTab('google')}
             >
               <MapIcon size={15} />
-              <span>Interactive Map</span>
+              <span>Google Maps</span>
             </button>
             <button
               type="button"
@@ -666,24 +466,6 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
               <span>Dual View</span>
             </button>
           </div>
-
-          <Button
-            variant="outline"
-            className="theatre-btn"
-            onClick={() => {
-              const dataStr =
-                'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(GEO_NO_FLY_ZONES, null, 2));
-              const downloadAnchor = document.createElement('a');
-              downloadAnchor.setAttribute('href', dataStr);
-              downloadAnchor.setAttribute('download', 'VEON-NoFlyZones-Geospatial.json');
-              document.body.appendChild(downloadAnchor);
-              downloadAnchor.click();
-              downloadAnchor.remove();
-            }}
-          >
-            <FileDown size={14} />
-            <span>Export Intel</span>
-          </Button>
         </div>
       </div>
 
@@ -692,602 +474,363 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         <span className="theatre-label">
           <Compass size={14} /> Focus Theatre:
         </span>
-        <button type="button" onClick={() => focusOnTheatre(49.0, 31.3, 4.2)}>
-          🇺🇦 Ukraine Airspace Closure
+        <button
+          type="button"
+          className={selectedZone?.id === 'NFZ-UA-01' ? 'active-theatre' : ''}
+          onClick={() => focusOnTheatre(49.0, 31.3, 6, 'NFZ-UA-01')}
+        >
+          🇺🇦 Ukraine
         </button>
-        <button type="button" onClick={() => focusOnTheatre(43.8, 34.5, 4.5)}>
-          🌊 Black Sea Maritime Corridor
+        <button
+          type="button"
+          className={selectedZone?.id === 'NFZ-BS-01' ? 'active-theatre' : ''}
+          onClick={() => focusOnTheatre(43.8, 34.5, 6, 'NFZ-BS-01')}
+        >
+          🌊 Black Sea
         </button>
-        <button type="button" onClick={() => focusOnTheatre(32.4, 53.6, 3.8)}>
-          🇮🇷 Persian Gulf & Iran Corridor
+        <button
+          type="button"
+          className={selectedZone?.id === 'NFZ-IR-01' ? 'active-theatre' : ''}
+          onClick={() => focusOnTheatre(32.4, 53.6, 6, 'NFZ-IR-01')}
+        >
+          🇮🇷 Persian Gulf
         </button>
-        <button type="button" onClick={() => focusOnTheatre(33.9, 73.8, 4.5)}>
-          🇵🇰 Pakistan LOC & Afghan FIR
+        <button
+          type="button"
+          className={selectedZone?.id === 'NFZ-AF-01' ? 'active-theatre' : ''}
+          onClick={() => focusOnTheatre(33.9, 67.7, 6, 'NFZ-AF-01')}
+        >
+          🇦🇫 Afghanistan
         </button>
-        <button type="button" onClick={() => focusOnTheatre(47.1, 51.9, 3.8)}>
-          🇰🇿 Caspian & Central Asia
+        <button
+          type="button"
+          className={selectedZone?.id === 'NFZ-PK-01' ? 'active-theatre' : ''}
+          onClick={() => focusOnTheatre(33.9, 73.8, 7, 'NFZ-PK-01')}
+        >
+          🇵🇰 Pakistan LOC
         </button>
-        <button type="button" onClick={() => focusOnTheatre(21.5, 92.2, 5.0)}>
-          🇧🇩 Bay of Bengal & Myanmar Buffer
+        <button
+          type="button"
+          className={selectedZone?.id === 'NFZ-KZ-01' ? 'active-theatre' : ''}
+          onClick={() => focusOnTheatre(47.1, 51.9, 6, 'NFZ-KZ-01')}
+        >
+          🇰🇿 Central Asia
+        </button>
+        <button
+          type="button"
+          className={selectedZone?.id === 'NFZ-BD-01' ? 'active-theatre' : ''}
+          onClick={() => focusOnTheatre(21.5, 92.2, 7, 'NFZ-BD-01')}
+        >
+          🇧🇩 Bay of Bengal
         </button>
         <button
           type="button"
           onClick={() => {
-            setCenter({x: 460, y: 105});
-            setZoom(2.2);
+            setSearchTarget('40.0,55.0');
+            setGoogleZoom(4);
           }}
-          style={{marginLeft: 'auto', background: '#EFF6FF', color: '#0284C7', borderColor: '#BFDBFE'}}
         >
-          <RotateCcw size={12} style={{display: 'inline', marginRight: '4px'}} /> Reset Overview
+          🌍 Global Overview
         </button>
       </div>
 
-      {/* Main Display Area: Interactive Google-Maps-Style Vector Map & 3D Globe */}
+      {/* Main Display Area */}
       <div className={`maps-viewport-layout layout-${activeTab}`}>
-        {/* 1. Real Google-Maps-Style Map with Countries, Cities & RED No-Fly Zones */}
-        {(activeTab === 'map' || activeTab === 'dual') && (
+        {/* 1. Official Google Maps View with Red Threat HUD */}
+        {(activeTab === 'google' || activeTab === 'dual') && (
           <div className="google-style-map-card">
+            {/* Google Maps Layer & Zoom Controls Toolbar */}
             <div className="viewport-overlay-header">
               <div className="viewport-tag">
                 <MapIcon size={14} />
-                <span>GOOGLE MAPS STYLE // SCROLL MOUSE WHEEL TO ZOOM</span>
+                <span>OFFICIAL GOOGLE MAPS // ROADMAP · SATELLITE · TERRAIN</span>
               </div>
 
+              {/* Map Type Switcher */}
               <div className="map-toolbar-actions">
-                <button
-                  type="button"
-                  className={`toolbar-btn ${showCities ? 'active' : ''}`}
-                  onClick={() => setShowCities(!showCities)}
-                  title="Toggle City Labels"
-                >
-                  <MapPin size={13} />
-                  <span>Cities</span>
-                </button>
-                <button
-                  type="button"
-                  className={`toolbar-btn ${showFlightRoutes ? 'active' : ''}`}
-                  onClick={() => setShowFlightRoutes(!showFlightRoutes)}
-                  title="Toggle Flight Deviations"
-                >
-                  <Plane size={13} />
-                  <span>Reroutes</span>
-                </button>
+                <div className="google-map-type-pills">
+                  <button
+                    type="button"
+                    className={googleMapType === 'm' ? 'active' : ''}
+                    onClick={() => setGoogleMapType('m')}
+                    title="Google Road Map (Countries, Cities, Roads)"
+                  >
+                    Road Map
+                  </button>
+                  <button
+                    type="button"
+                    className={googleMapType === 'k' ? 'active' : ''}
+                    onClick={() => setGoogleMapType('k')}
+                    title="Google Satellite Imagery"
+                  >
+                    Satellite
+                  </button>
+                  <button
+                    type="button"
+                    className={googleMapType === 'p' ? 'active' : ''}
+                    onClick={() => setGoogleMapType('p')}
+                    title="Google Topographic Terrain"
+                  >
+                    Terrain
+                  </button>
+                  <button
+                    type="button"
+                    className={googleMapType === 'h' ? 'active' : ''}
+                    onClick={() => setGoogleMapType('h')}
+                    title="Google Hybrid (Satellite + Sovereign Borders)"
+                  >
+                    Hybrid
+                  </button>
+                </div>
+
+                {/* Search Bar on Google Maps */}
+                <form onSubmit={handleSearchSubmit} className="google-map-search-form">
+                  <Search size={13} className="text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search country or city..."
+                    value={customSearch}
+                    onChange={(e) => setCustomSearch(e.target.value)}
+                    className="google-search-input"
+                  />
+                </form>
+
+                {/* Zoom In / Out Buttons */}
                 <div className="zoom-btn-group">
-                  <button type="button" onClick={() => setZoom((z) => Math.min(8.5, z * 1.3))} title="Zoom In">
+                  <button
+                    type="button"
+                    onClick={() => setGoogleZoom((z) => Math.min(18, z + 1))}
+                    title="Zoom in on Google Map"
+                  >
                     <ZoomIn size={14} />
                   </button>
-                  <button type="button" onClick={() => setZoom((z) => Math.max(1, z * 0.77))} title="Zoom Out">
+                  <span className="zoom-indicator-text">{googleZoom}x</span>
+                  <button
+                    type="button"
+                    onClick={() => setGoogleZoom((z) => Math.max(3, z - 1))}
+                    title="Zoom out on Google Map"
+                  >
                     <ZoomOut size={14} />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Interactive Vector Map Container with Mouse-Wheel Zooming */}
-            <div
-              ref={mapContainerRef}
-              className="google-map-interactive-viewport"
-              onWheel={handleMapWheel}
-              onMouseDown={handleMapMouseDown}
-              onMouseMove={handleMapMouseMove}
-              onMouseUp={handleMapMouseUp}
-              onMouseLeave={handleMapMouseUp}
-              style={{cursor: isDraggingMap.current ? 'grabbing' : 'grab'}}
-            >
-              <svg
-                viewBox={currentViewBox}
-                className="google-style-svg-map"
-                role="img"
-                aria-label="Interactive world map with cities and red no fly zones"
-              >
-                <defs>
-                  {/* Google Maps Ocean Gradient */}
-                  <linearGradient id="googleOceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#CBE5F5" />
-                    <stop offset="100%" stopColor="#BCE0F3" />
-                  </linearGradient>
+            {/* Google Map Embedded Frame */}
+            <div className="google-map-embed-wrapper">
+              <iframe
+                src={`https://maps.google.com/maps?q=${searchTarget}&t=${googleMapType}&z=${googleZoom}&output=embed`}
+                className="google-maps-iframe"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Google Maps Tactical Airspace Intelligence"
+              />
 
-                  {/* Red Threat Hazard Hatch */}
-                  <pattern
-                    id="redHazardPattern"
-                    width="6"
-                    height="6"
-                    patternTransform="rotate(45 0 0)"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <line x1="0" y1="0" x2="0" y2="6" stroke="#DC2626" strokeWidth="1.8" strokeOpacity="0.45" />
-                  </pattern>
+              {/* Floating RED No-Fly Zone Tactical HUD on Google Maps */}
+              <div className="floating-red-threat-hud">
+                <div className="threat-hud-header">
+                  <div className="threat-header-left">
+                    <span className="red-pulse-indicator" />
+                    <strong>ACTIVE NO-FLY ZONES (RED)</strong>
+                  </div>
+                  <span className="hud-badge-red">7 RESTRICTED</span>
+                </div>
 
-                  {/* Red Radar Radial Gradient */}
-                  <radialGradient id="redRadarGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#EF4444" stopOpacity="0.7" />
-                    <stop offset="70%" stopColor="#DC2626" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#B91C1C" stopOpacity="0.05" />
-                  </radialGradient>
-                </defs>
-
-                {/* Ocean Backdrop */}
-                <rect x="0" y="0" width="720" height="300" fill="url(#googleOceanGrad)" />
-
-                {/* Latitude & Longitude Coordinate Grid */}
-                {[75, 150, 225].map((y) => (
-                  <line
-                    key={`h-${y}`}
-                    x1="0"
-                    y1={y}
-                    x2="720"
-                    y2={y}
-                    stroke="rgba(255, 255, 255, 0.45)"
-                    strokeWidth="0.5"
-                    strokeDasharray="4 4"
-                  />
-                ))}
-                {[180, 360, 540].map((x) => (
-                  <line
-                    key={`v-${x}`}
-                    x1={x}
-                    y1="0"
-                    x2={x}
-                    y2="300"
-                    stroke="rgba(255, 255, 255, 0.45)"
-                    strokeWidth="0.5"
-                    strokeDasharray="4 4"
-                  />
-                ))}
-
-                {/* Sovereign Landmass Polygons from world.json */}
-                {world.map((country) => {
-                  const isVeonMarket = ['Ukraine', 'Kazakhstan', 'Uzbekistan', 'Pakistan', 'Bangladesh'].includes(
-                    country.name
-                  );
-                  return (
-                    <path
-                      key={country.name}
-                      d={country.d}
-                      fill={isVeonMarket ? '#EBF5FB' : '#FAF8F5'}
-                      stroke={isVeonMarket ? '#0284C7' : '#D1D5DB'}
-                      strokeWidth={isVeonMarket ? (0.9 / Math.sqrt(zoom)) : (0.45 / Math.sqrt(zoom))}
-                      className="google-country-path"
-                    >
-                      <title>{country.name}</title>
-                    </path>
-                  );
-                })}
-
-                {/* Commercial Flight Detour Corridors */}
-                {showFlightRoutes &&
-                  FLIGHT_CORRIDORS.map((corr) => {
-                    const pointsStr = corr.points.map((p) => `${p.x},${p.y}`).join(' ');
+                <div className="threat-zone-quicklist">
+                  {displayedZones.map((zone) => {
+                    const isSelected = activeZone?.id === zone.id;
                     return (
-                      <g key={corr.id} className="flight-detour-group">
-                        <polyline
-                          points={pointsStr}
-                          fill="none"
-                          stroke="#0284C7"
-                          strokeWidth={1.8 / Math.sqrt(zoom)}
-                          strokeDasharray={`${4 / Math.sqrt(zoom)} ${4 / Math.sqrt(zoom)}`}
-                          opacity="0.85"
-                        />
-                        {/* Waypoints */}
-                        {corr.points.map((p, idx) => (
-                          <circle
-                            key={idx}
-                            cx={p.x}
-                            cy={p.y}
-                            r={1.8 / Math.sqrt(zoom)}
-                            fill="#0284C7"
-                            stroke="#FFFFFF"
-                            strokeWidth={0.6 / Math.sqrt(zoom)}
-                          />
-                        ))}
-                      </g>
+                      <div
+                        key={zone.id}
+                        className={`threat-zone-chip ${isSelected ? 'selected' : ''}`}
+                        onClick={() => handleSelectZone(zone)}
+                      >
+                        <div className="chip-left">
+                          <span className="chip-bullet-red" />
+                          <div className="chip-info">
+                            <span className="chip-id">{zone.id}</span>
+                            <span className="chip-name">{zone.name}</span>
+                          </div>
+                        </div>
+                        <div className="chip-meta">
+                          <span className="chip-detour">+{zone.detourImpactMinutes}m</span>
+                          <span className="chip-risk">{zone.riskFactor}%</span>
+                        </div>
+                      </div>
                     );
                   })}
+                </div>
 
-                {/* ALL NO-FLY ZONES IN BOLD VIBRANT RED */}
-                {displayedZones.map((zone) => {
-                  const isHovered = hoveredZoneId === zone.id || selectedZone?.id === zone.id;
-                  const strokeW = (isHovered ? 2.8 : 1.6) / Math.sqrt(zoom);
+                {/* Selected Threat Card Details */}
+                {activeZone && (
+                  <div className="selected-threat-dossier">
+                    <div className="dossier-headline">
+                      <div>
+                        <h4>{activeZone.name}</h4>
+                        <div className="dossier-coords">
+                          {activeZone.lat.toFixed(1)}° N, {activeZone.lon.toFixed(1)}° E · {activeZone.radiusKm} km radius
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="inspect-btn-red"
+                        onClick={() => setModalZone(activeZone)}
+                      >
+                        <Eye size={12} className="mr-1" /> Dossier
+                      </Button>
+                    </div>
 
-                  return (
-                    <g
-                      key={zone.id}
-                      className="red-no-fly-zone-group"
-                      onClick={() => setSelectedZone(zone)}
-                      onMouseEnter={() => setHoveredZoneId(zone.id)}
-                      onMouseLeave={() => setHoveredZoneId(null)}
-                      style={{cursor: 'pointer'}}
-                    >
-                      {/* 1. Main Red Hazard Exclusion Radius */}
-                      <circle
-                        cx={zone.svgX}
-                        cy={zone.svgY}
-                        r={zone.radiusSvg}
-                        fill="url(#redHazardPattern)"
-                        stroke="#DC2626"
-                        strokeWidth={strokeW}
-                        className="red-hazard-area"
-                      />
-
-                      {/* 2. Red Radial Shading Fill */}
-                      <circle
-                        cx={zone.svgX}
-                        cy={zone.svgY}
-                        r={zone.radiusSvg}
-                        fill="url(#redRadarGlow)"
-                        opacity={isHovered ? '0.9' : '0.6'}
-                      />
-
-                      {/* 3. Outer Red Pulsing Warning Perimeter */}
-                      <circle
-                        cx={zone.svgX}
-                        cy={zone.svgY}
-                        r={zone.radiusSvg * 1.15}
-                        fill="none"
-                        stroke="#EF4444"
-                        strokeWidth={1 / Math.sqrt(zoom)}
-                        strokeDasharray={`${3 / Math.sqrt(zoom)} ${3 / Math.sqrt(zoom)}`}
-                        opacity="0.8"
-                      />
-
-                      {/* 4. Core Threat Epicenter */}
-                      <circle
-                        cx={zone.svgX}
-                        cy={zone.svgY}
-                        r={3.8 / Math.sqrt(zoom)}
-                        fill="#DC2626"
-                        stroke="#FFFFFF"
-                        strokeWidth={1 / Math.sqrt(zoom)}
-                      />
-
-                      {/* 5. High-Contrast Red NOTAM Label Tag */}
-                      <g transform={`translate(${zone.svgX}, ${zone.svgY - zone.radiusSvg - 6 / Math.sqrt(zoom)})`}>
-                        <rect
-                          x={-24 / Math.sqrt(zoom)}
-                          y={-9 / Math.sqrt(zoom)}
-                          width={48 / Math.sqrt(zoom)}
-                          height={12 / Math.sqrt(zoom)}
-                          rx={3 / Math.sqrt(zoom)}
-                          fill="#DC2626"
-                          stroke="#FFFFFF"
-                          strokeWidth={0.8 / Math.sqrt(zoom)}
-                        />
-                        <text
-                          x="0"
-                          y={-1 / Math.sqrt(zoom)}
-                          fill="#FFFFFF"
-                          fontSize={6.5 / Math.sqrt(zoom)}
-                          fontWeight="800"
-                          textAnchor="middle"
-                          fontFamily="Montserrat, sans-serif"
-                        >
-                          {zone.id}
-                        </text>
-                      </g>
-                    </g>
-                  );
-                })}
-
-                {/* Proper World Cities with Google Maps Labels */}
-                {showCities &&
-                  WORLD_CITIES.map((city) => {
-                    const isCapital = city.type === 'capital';
-                    const markerRadius = (isCapital ? 2.5 : 1.8) / Math.sqrt(zoom);
-                    const fontSize = (isCapital ? 6.2 : 5.0) / Math.sqrt(zoom);
-
-                    return (
-                      <g key={city.name} className="google-city-marker" style={{pointerEvents: 'none'}}>
-                        {/* City Dot */}
-                        <circle
-                          cx={city.x}
-                          cy={city.y}
-                          r={markerRadius}
-                          fill={isCapital ? '#1E293B' : '#64748B'}
-                          stroke="#FFFFFF"
-                          strokeWidth={0.6 / Math.sqrt(zoom)}
-                        />
-
-                        {/* City Name with Google-style white outline */}
-                        <text
-                          x={city.x + (isCapital ? 3.5 : 2.5) / Math.sqrt(zoom)}
-                          y={city.y + (isCapital ? 2.0 : 1.5) / Math.sqrt(zoom)}
-                          fontSize={fontSize}
-                          fontWeight={isCapital ? '700' : '500'}
-                          fill="#1E293B"
-                          stroke="#FFFFFF"
-                          strokeWidth={1.8 / Math.sqrt(zoom)}
-                          strokeLinejoin="round"
-                          paintOrder="stroke"
-                          fontFamily="Inter, Roboto, sans-serif"
-                        >
-                          {city.name}
-                        </text>
-                      </g>
-                    );
-                  })}
-              </svg>
-            </div>
-
-            {/* Bottom Legend */}
-            <div className="map-bottom-legend">
-              <div className="legend-item">
-                <span className="legend-box red-hazard" />
-                <span>
-                  <strong>RED Airspace Exclusion Zone</strong> (SFC – UNL Prohibition)
-                </span>
-              </div>
-              <div className="legend-item">
-                <span className="legend-box blue-route" />
-                <span>Commercial Flight Detour Waypoints</span>
-              </div>
-              <div className="legend-item">
-                <span className="legend-box city-point" />
-                <span>Capital & Frontier Cities</span>
-              </div>
-              <div className="legend-hint">
-                <span>Pass cursor over map and scroll mouse wheel to zoom in/out anywhere</span>
+                    <div className="dossier-grid">
+                      <div className="dossier-cell">
+                        <small>ALTITUDE</small>
+                        <strong>{activeZone.altitude}</strong>
+                      </div>
+                      <div className="dossier-cell">
+                        <small>NOTAM REF</small>
+                        <code>{activeZone.notamReference}</code>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* 2. 3D Interactive Spinning Globe Section */}
+        {/* 2. 3D Tactical Globe View */}
         {(activeTab === 'globe' || activeTab === 'dual') && (
-          <div className="globe-viewport-card">
-            <div className="viewport-overlay-header">
-              <div className="viewport-tag">
+          <div className="globe-canvas-card">
+            <div className="globe-header-overlay">
+              <div className="globe-tag">
                 <Globe size={14} />
-                <span>3D ORTHOGRAPHIC PROJECTION</span>
+                <span>3D TACTICAL AIRSPACE GLOBE // RED THREAT RADAR</span>
               </div>
-              <div className="globe-hud-controls">
+              <div className="globe-quick-controls">
                 <button
                   type="button"
-                  title={autoRotate ? 'Pause Rotation' : 'Auto Rotate'}
                   onClick={() => setAutoRotate(!autoRotate)}
+                  className={`ctrl-btn ${autoRotate ? 'active' : ''}`}
+                  title="Toggle Auto-Rotation"
                 >
                   {autoRotate ? <Pause size={13} /> : <Play size={13} />}
+                  <span>{autoRotate ? 'Pause' : 'Spin'}</span>
                 </button>
                 <button
                   type="button"
-                  title="Zoom In"
-                  onClick={() => setGlobeZoom((z) => Math.min(2.2, z + 0.2))}
+                  onClick={() => setGlobeZoom((z) => Math.min(2.5, z * 1.25))}
+                  className="ctrl-btn"
+                  title="Zoom In Globe"
                 >
                   <ZoomIn size={13} />
                 </button>
                 <button
                   type="button"
-                  title="Zoom Out"
-                  onClick={() => setGlobeZoom((z) => Math.max(0.7, z - 0.2))}
+                  onClick={() => setGlobeZoom((z) => Math.max(0.65, z * 0.8))}
+                  className="ctrl-btn"
+                  title="Zoom Out Globe"
                 >
                   <ZoomOut size={13} />
-                </button>
-                <button
-                  type="button"
-                  title="Reset Orientation"
-                  onClick={() => {
-                    rotationRef.current = {x: 0.35, y: -45};
-                    setGlobeZoom(1);
-                  }}
-                >
-                  <RotateCcw size={13} />
                 </button>
               </div>
             </div>
 
-            <div className="globe-canvas-wrap">
-              <canvas
-                ref={canvasRef}
-                width={700}
-                height={550}
-                onWheel={(e) => {
-                  e.preventDefault();
-                  setGlobeZoom((prev) => Math.max(0.65, Math.min(2.5, prev - e.deltaY * 0.0018)));
-                }}
-                onMouseDown={(e) => {
-                  isDraggingGlobe.current = true;
-                  dragStartGlobe.current = {x: e.clientX, y: e.clientY};
-                }}
-                onMouseMove={(e) => {
-                  if (!isDraggingGlobe.current) return;
-                  const dx = e.clientX - dragStartGlobe.current.x;
-                  const dy = e.clientY - dragStartGlobe.current.y;
-                  dragStartGlobe.current = {x: e.clientX, y: e.clientY};
-                  rotationRef.current.y += dx * 0.4;
-                  rotationRef.current.x = Math.max(-1.1, Math.min(1.1, rotationRef.current.x - dy * 0.005));
-                }}
-                onMouseUp={() => (isDraggingGlobe.current = false)}
-                onMouseLeave={() => (isDraggingGlobe.current = false)}
-                onClick={(e) => {
-                  const canvas = canvasRef.current;
-                  if (!canvas) return;
-                  const rect = canvas.getBoundingClientRect();
-                  const mouseX = e.clientX - rect.left;
-                  const mouseY = e.clientY - rect.top;
-                  const width = canvas.width;
-                  const height = canvas.height;
-                  const cx = width / 2;
-                  const cy = height / 2;
-                  const R = Math.min(width, height) * 0.42 * globeZoom;
-                  const rotX = rotationRef.current.x;
-                  const rotY = (rotationRef.current.y * Math.PI) / 180;
-
-                  for (const zone of displayedZones) {
-                    const phi = (zone.lat * Math.PI) / 180;
-                    const theta = (zone.lon * Math.PI) / 180 + rotY;
-                    const x3d = R * Math.cos(phi) * Math.sin(theta);
-                    const y3d = -R * Math.sin(phi);
-                    const z3d = R * Math.cos(phi) * Math.cos(theta);
-                    const yRot = y3d * Math.cos(rotX) - z3d * Math.sin(rotX);
-                    const zRot = y3d * Math.sin(rotX) + z3d * Math.cos(rotX);
-
-                    if (zRot > 0) {
-                      const ptX = cx + x3d;
-                      const ptY = cy + yRot;
-                      if (Math.hypot(mouseX - ptX, mouseY - ptY) < 24) {
-                        setSelectedZone(zone);
-                        return;
-                      }
-                    }
-                  }
-                }}
-                style={{cursor: isDraggingGlobe.current ? 'grabbing' : 'grab'}}
-              />
-            </div>
-
-            <div className="globe-canvas-instructions">
-              <span>Scroll mouse wheel to zoom · Drag to rotate sphere · Click red beacons for NOTAM details</span>
-            </div>
+            <canvas
+              ref={canvasRef}
+              className="globe-canvas"
+              onMouseDown={(e) => {
+                isDraggingGlobe.current = true;
+                dragStartGlobe.current = {x: e.clientX, y: e.clientY};
+              }}
+              onMouseMove={(e) => {
+                if (!isDraggingGlobe.current) return;
+                const dx = e.clientX - dragStartGlobe.current.x;
+                const dy = e.clientY - dragStartGlobe.current.y;
+                dragStartGlobe.current = {x: e.clientX, y: e.clientY};
+                rotationRef.current.y += dx * 0.5;
+                rotationRef.current.x = Math.max(-1.2, Math.min(1.2, rotationRef.current.x + dy * 0.005));
+              }}
+              onMouseUp={() => {
+                isDraggingGlobe.current = false;
+              }}
+              onMouseLeave={() => {
+                isDraggingGlobe.current = false;
+              }}
+            />
           </div>
         )}
       </div>
 
-      {/* Tactical Airspace Intelligence Matrix Cards */}
-      <div className="airspace-matrix-strip">
-        <div className="matrix-strip-header">
-          <h3>
-            <ShieldAlert size={16} style={{color: '#DC2626'}} /> Active Red No-Fly Zones ({displayedZones.length})
-          </h3>
-          <span>Click any zone to focus map and view official aviation safety bulletin</span>
-        </div>
+      {/* Comprehensive Intelligence Modal for Selected Zone */}
+      {modalZone && (
+        <Dialog open={!!modalZone} onOpenChange={(open) => !open && setModalZone(null)}>
+          <DialogContent className="max-w-xl p-0 overflow-hidden bg-white border border-slate-200 shadow-2xl rounded-2xl">
+            <div className="p-6 bg-slate-900 text-white relative">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-[11px] font-bold tracking-wider uppercase bg-red-600 text-white">
+                  {modalZone.status}
+                </span>
+                <span className="text-xs text-slate-400 font-mono">NOTAM: {modalZone.notamReference}</span>
+              </div>
+              <DialogTitle className="text-xl font-bold text-white mb-1">{modalZone.name}</DialogTitle>
+              <DialogDescription className="text-sm text-slate-300">
+                Geopolitical threat evaluation, commercial aviation diversion corridors, and airspace restriction data.
+              </DialogDescription>
+            </div>
 
-        <div className="zone-cards-scroll-grid">
-          {displayedZones.map((zone) => {
-            const isSelected = selectedZone?.id === zone.id;
-            return (
-              <div
-                key={zone.id}
-                className={`zone-dossier-card red-theme ${isSelected ? 'selected' : ''}`}
-                onClick={() => {
-                  setSelectedZone(zone);
-                  focusOnTheatre(zone.lat, zone.lon, 4.5);
-                }}
-              >
-                <div className="card-top-row">
-                  <span className="severity-tag red-critical">{zone.severity}</span>
-                  <span className="detour-badge">+{zone.detourImpactMinutes}m detour</span>
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <small className="block text-[10px] font-bold uppercase text-slate-500 mb-1">FIR AFFECTED</small>
+                  <strong className="text-xs text-slate-900 font-mono">{modalZone.firCode}</strong>
                 </div>
-                <h4>{zone.name}</h4>
-                <div className="card-meta-line">
-                  <span className="fir-code">{zone.firCode}</span>
-                  <span className="market-name">{zone.market}</span>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <small className="block text-[10px] font-bold uppercase text-slate-500 mb-1">FLIGHT DETOUR</small>
+                  <strong className="text-xs text-red-600 font-bold">+{modalZone.detourImpactMinutes} min</strong>
                 </div>
-                <div className="altitude-cap">
-                  <strong>Altitude:</strong> {zone.altitude}
-                </div>
-                <p className="card-rationale">{zone.rationale}</p>
-                <div className="card-footer-action">
-                  <span>Focus on Map & Inspect NOTAM</span>
-                  <ChevronRight size={14} />
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <small className="block text-[10px] font-bold uppercase text-slate-500 mb-1">RISK INDEX</small>
+                  <strong className="text-xs text-red-600 font-bold">{modalZone.riskFactor} / 100</strong>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Zone Detail Modal / Inspector Drawer */}
-      {selectedZone && (
-        <Dialog open={Boolean(selectedZone)} onOpenChange={(open) => !open && setSelectedZone(null)}>
-          <DialogContent className="tactical-zone-modal">
-            <div className="modal-header-banner" style={{borderTopColor: '#DC2626'}}>
-              <div className="modal-title-row">
-                <div>
-                  <div className="modal-eyebrow">
-                    <span className="modal-sev-pill red-critical">
-                      {selectedZone.severity.toUpperCase()}
-                    </span>
-                    <span>{selectedZone.status}</span>
-                  </div>
-                  <DialogTitle>{selectedZone.name}</DialogTitle>
-                  <DialogDescription>
-                    {selectedZone.firCode} · Operational Territory: {selectedZone.market}
-                  </DialogDescription>
-                </div>
-                <button
-                  type="button"
-                  className="modal-close-cross"
-                  onClick={() => setSelectedZone(null)}
-                  aria-label="Close"
-                >
-                  <X size={18} />
-                </button>
+              <div className="space-y-1">
+                <h5 className="text-xs font-bold uppercase text-slate-700">Restricted Altitudes</h5>
+                <p className="text-sm text-slate-600 bg-red-50/50 p-2.5 rounded-lg border border-red-100 font-mono text-xs">
+                  {modalZone.altitude}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <h5 className="text-xs font-bold uppercase text-slate-700">Geopolitical Threat Vector & Rationale</h5>
+                <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  {modalZone.rationale}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <h5 className="text-xs font-bold uppercase text-slate-700">Standing Date & Lineage</h5>
+                <p className="text-xs text-slate-500">
+                  Effective from {modalZone.effectiveDate}. Continuous satellite surveillance and real-time civil aviation
+                  notices updated hourly.
+                </p>
               </div>
             </div>
 
-            <div className="modal-body-scroll">
-              <div className="modal-kpi-grid">
-                <div className="modal-kpi-cell">
-                  <span className="cell-label">Altitude Restrictions</span>
-                  <strong>{selectedZone.altitude}</strong>
-                </div>
-                <div className="modal-kpi-cell">
-                  <span className="cell-label">Avg Commercial Detour</span>
-                  <strong style={{color: '#DC2626'}}>+{selectedZone.detourImpactMinutes} min</strong>
-                </div>
-                <div className="modal-kpi-cell">
-                  <span className="cell-label">Risk Severity Index</span>
-                  <strong style={{color: '#DC2626'}}>{selectedZone.riskFactor} / 100</strong>
-                </div>
-                <div className="modal-kpi-cell">
-                  <span className="cell-label">NOTAM Classification</span>
-                  <strong>{selectedZone.notamReference}</strong>
-                </div>
-              </div>
-
-              <div className="modal-detail-section">
-                <h5>Operational Conflict Rationale</h5>
-                <p>{selectedZone.rationale}</p>
-              </div>
-
-              <div className="modal-detail-section">
-                <h5>Geospatial Coordinate Envelope</h5>
-                <code>
-                  {selectedZone.lat}° N, {selectedZone.lon}° E (Effective Threat Radius: {selectedZone.radiusKm} km)
-                </code>
-                <small>Updated via ICAO Safety Database & Regional Civil Aviation Bulletins</small>
-              </div>
-
-              <div className="modal-detail-section">
-                <h5>Associated Commercial Flight Circumventions</h5>
-                <div className="diversion-mini-list">
-                  {FLIGHT_CORRIDORS.filter((c) => c.avoidedZone.includes(selectedZone.name)).length > 0 ? (
-                    FLIGHT_CORRIDORS.filter((c) => c.avoidedZone.includes(selectedZone.name)).map((corr) => (
-                      <div key={corr.id} className="mini-diversion-item">
-                        <div className="diversion-head">
-                          <strong>
-                            {corr.flightNumber} ({corr.airline})
-                          </strong>
-                          <span className="delay-badge">+{corr.detourMin} min</span>
-                        </div>
-                        <p>
-                          {corr.from} ➔ {corr.to} (Rerouted around {selectedZone.name})
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="no-flights-note">
-                      Civil airlines maintain standing perimeter circumvention of at least 80 nautical miles outside
-                      this sector.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer-action-bar">
-              <Button variant="outline" onClick={() => setSelectedZone(null)}>
-                Close Dossier
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setModalZone(null)}>
+                Dismiss
               </Button>
               <Button
-                className="primary-action-btn"
-                style={{background: '#DC2626'}}
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white"
                 onClick={() => {
-                  focusOnTheatre(selectedZone.lat, selectedZone.lon, 4.5);
-                  setSelectedZone(null);
+                  focusOnTheatre(modalZone.lat, modalZone.lon, 7, modalZone.id);
+                  setModalZone(null);
                 }}
               >
-                <Navigation size={14} />
-                <span>Center Map on Zone</span>
+                <MapPin size={13} className="mr-1.5" /> Center on Google Map
               </Button>
             </div>
           </DialogContent>

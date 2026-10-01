@@ -23,6 +23,7 @@ import {
   X,
   Globe,
   Map as MapIcon,
+  MapPin,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -276,7 +277,7 @@ export default function Home() {
               ['Signals', Radio],
               ['Market signals', TrendingUp],
               ['Airspace & No-Fly', Plane],
-              ['Maps & Globe', Globe],
+              ['Google Maps', Globe],
               ['Assessment', Shield],
               ['Alert queue', Activity],
               ['Evidence', BookOpen],
@@ -343,10 +344,6 @@ export default function Home() {
               <span className="beacon-pulse" />
               <span>LIVE FEED · {utcTime || 'SYNCHRONIZING'}</span>
             </div>
-            <span className="private">
-              <Shield size={12} />
-              <span>Restricted Command</span>
-            </span>
             <button
               type="button"
               className="sign-out-btn"
@@ -366,11 +363,6 @@ export default function Home() {
           {/* Page Heading & Tactical Action Strip */}
           <div className="page-heading">
             <div>
-              <div className="eyebrow">
-                <span className="eyebrow-pill">
-                  <Shield size={12} /> RESTRICTED // STRATEGIC RISK INTELLIGENCE
-                </span>
-              </div>
               <h1>
                 {view === 'Overview'
                   ? market === 'All markets'
@@ -378,22 +370,20 @@ export default function Home() {
                     : market + ' perspective.'
                   : view}
               </h1>
-              <p>
-                {view === 'Overview'
-                  ? 'Real-time geopolitical early-warning, scenario stress-testing, and automated risk correlation.'
-                  : 'From emerging signals to informed leadership action across five frontier markets.'}
-              </p>
+              {view === 'Overview' && (
+                <p>Real-time geopolitical early-warning, scenario stress-testing, and automated risk correlation.</p>
+              )}
             </div>
             <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
               <Button
                 variant="outline"
                 className="maps-quick-btn"
-                onClick={() => setView('Maps & Globe')}
-                title="Visualize No-Fly Zones on 3D Globe & Tactical Map"
+                onClick={() => setView('Google Maps')}
+                title="Visualize No-Fly Zones on Google Maps"
               >
-                <Globe size={15} style={{color: '#0284C7'}} />
-                <span>Maps & Globe</span>
-                <span className="maps-btn-badge">7 NFZ</span>
+                <MapPin size={15} style={{color: '#DC2626'}} />
+                <span>Google Maps</span>
+                <span className="maps-btn-badge" style={{background: '#DC2626', color: '#FFF'}}>7 RED NFZ</span>
               </Button>
               <Button className="primary-add-btn" onClick={() => setEditing(blankSituation())}>
                 <Plus size={16} />
@@ -474,6 +464,38 @@ export default function Home() {
             <>
               <SituationFilters value={filters} onChange={setFilters} />
               <CountryDomains w={w} situations={filtered} market={market} />
+
+              {/* High-Visibility Google Maps Intelligence Card on Overview */}
+              <div className="overview-google-maps-card">
+                <div className="overview-maps-banner">
+                  <div className="banner-left">
+                    <span className="red-pulse-indicator" />
+                    <div>
+                      <div className="banner-title-row">
+                        <h3>Google Maps Tactical Airspace Intelligence</h3>
+                        <span className="hud-badge-red">7 NO-FLY ZONES (RED)</span>
+                      </div>
+                      <p>
+                        Full Google Maps integration tracking sovereign boundaries, major cities, and active flight
+                        closure corridors across Ukraine, Black Sea, Middle East & South Asia.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="banner-actions">
+                    <Button
+                      className="open-google-maps-btn"
+                      onClick={() => {
+                        setView('Google Maps');
+                        window.scrollTo({top: 0, behavior: 'smooth'});
+                      }}
+                    >
+                      <Globe size={15} />
+                      <span>Open Google Maps</span>
+                      <ChevronRight size={14} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
               <div className="overview-grid">
                 {/* Situation Landscape Matrix */}
@@ -665,9 +687,9 @@ export default function Home() {
 
           {view === 'Market signals' && <MarketSignals w={w} market={market} />}
           {view === 'Airspace & No-Fly' && (
-            <AviationRadar w={w} market={market} onOpenMaps={() => setView('Maps & Globe')} />
+            <AviationRadar w={w} market={market} onOpenMaps={() => setView('Google Maps')} />
           )}
-          {view === 'Maps & Globe' && <AviationMapsVisualizer w={w} market={market} />}
+          {(view === 'Maps & Globe' || view === 'Google Maps') && <AviationMapsVisualizer w={w} market={market} />}
           {view === 'Assessment' && (
             <AssessmentDesk key={market + assessmentId} w={w} situations={filtered} initial={assessmentId} />
           )}

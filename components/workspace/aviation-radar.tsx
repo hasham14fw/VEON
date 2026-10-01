@@ -146,19 +146,10 @@ export function AviationRadar({w, market, onOpenMaps}: {w: Work; market: string;
             <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 shadow-inner">
               <Plane className="w-6 h-6 animate-pulse" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold tracking-tight text-slate-900">
-                  Airspace Integrity & Tactical No-Fly Radar
-                </h2>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  Live Aviationstack Feed
-                </span>
-              </div>
-              <p className="text-sm text-slate-500 mt-0.5">
-                Monitoring conflict zone airspace closures, tactical bypass corridors, and commercial flight diversions across VEON operations.
-              </p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                Airspace Integrity & Tactical No-Fly Radar
+              </h2>
             </div>
           </div>
 
