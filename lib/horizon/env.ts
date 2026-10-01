@@ -7,6 +7,8 @@ export interface HorizonEnv {
   FINNHUB_API_URL?: string;
   MASSIVE_API_KEY?: string;
   MASSIVE_API_URL?: string;
+  AVIATIONSTACK_API_KEY?: string;
+  AVIATIONSTACK_API_URL?: string;
   MARKET_FEED_URL?: string;
   MARKET_FEED_TOKEN?: string;
   DB?: D1Database;

@@ -4,11 +4,7 @@ import {useState, type FormEvent} from 'react';
 import {
   Lock,
   User,
-  Eye,
-  EyeOff,
-  ArrowRight,
   AlertTriangle,
-  Sparkles,
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -61,183 +57,194 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-viewport">
-      {/* Background ambient lighting effects */}
-      <div className="login-ambient-glow" />
-      <div className="login-grid-overlay" />
+    <div className="login-viewport-modern">
+      {/* Centered Modern Card */}
+      <div className="login-card-modern">
+        {/* Exact Geometric SVG Backdrop with Circles and Organic Turns in VEON Black & Yellow */}
+        <svg
+          className="login-card-backdrop-svg"
+          viewBox="0 0 860 500"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            {/* Base obsidian black gradient */}
+            <linearGradient id="blackBase" x1="0%" y1="0%" x2="65%" y2="100%">
+              <stop offset="0%" stopColor="#1E232E" />
+              <stop offset="45%" stopColor="#0D1017" />
+              <stop offset="100%" stopColor="#05070B" />
+            </linearGradient>
 
-      {/* Top microbar */}
-      <header className="login-top-tag">
-        <span className="live-status-dot" />
-        <span className="mono-text">VEON SECURE GATEWAY · GEO-EW COMMAND PROTOCOL v2.4</span>
-      </header>
+            {/* Center Floating 3D VEON Gold/Yellow Sphere */}
+            <radialGradient id="sphereGradCenter" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#FFF4B8" />
+              <stop offset="35%" stopColor="#FFC836" />
+              <stop offset="70%" stopColor="#D97706" />
+              <stop offset="100%" stopColor="#78350F" />
+            </radialGradient>
 
-      {/* Main Section in the Middle */}
-      <main className="login-center-container">
-        <div className="login-card">
-          
-          {/* LEFT PART: Brand, Logo & Name VEON GEO-EW System (White with border) */}
-          <section className="login-left-pane">
-            <div className="login-left-content">
-              {/* Security Classification Pill */}
-              <div className="login-classification-pill">
-                <span className="pulse-yellow-dot" />
-                <span>RESTRICTED ACCESS · CORPORATE AFFAIRS</span>
-              </div>
+            {/* Bottom Left 3D Amber Sphere */}
+            <radialGradient id="sphereGradLeft" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#FDE68A" />
+              <stop offset="45%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#451A03" />
+            </radialGradient>
 
-              {/* Center Brand Group */}
-              <div className="login-brand-center">
-                <div className="login-logo-wrap">
-                  <img
-                    src="/brand/veon-logo-yellow.svg"
-                    alt="VEON"
-                    className="login-veon-logo"
-                    width="190"
-                    height="88"
-                  />
-                </div>
+            {/* Bottom Right Corner Yellow Sphere (peeking in) */}
+            <radialGradient id="sphereGradRight" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#FFE082" />
+              <stop offset="50%" stopColor="#FFA000" />
+              <stop offset="100%" stopColor="#663300" />
+            </radialGradient>
 
-                <div className="login-title-group">
-                  <h1 className="login-system-title">
-                    <span className="title-veon">VEON</span>{' '}
-                    <span className="title-highlight">GEO-EW</span>{' '}
-                    <span className="title-system">System</span>
-                  </h1>
-                  <p className="login-system-sub">
-                    Geospatial Early-Warning & Geopolitical Risk Intelligence
-                  </p>
-                </div>
-              </div>
+            {/* Realistic soft golden drop shadow for center floating sphere */}
+            <filter id="centerSphereShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="8" dy="16" stdDeviation="15" floodColor="#000000" floodOpacity="0.45" />
+            </filter>
+          </defs>
 
-              {/* Minimal Brand Seal */}
-              <div className="login-left-minimal-seal">
-                <span className="seal-dot" />
-                <span>Group Intelligence Workspace</span>
-              </div>
+          {/* Organic black wave with sweeping circular turn across top and middle */}
+          <path
+            d="M 0 0 
+               L 410 0 
+               C 460 70, 460 195, 405 280 
+               C 355 355, 275 425, 215 500 
+               L 0 500 
+               Z"
+            fill="url(#blackBase)"
+          />
+
+          {/* Sphere 2: Bottom-Left (partially off-screen) */}
+          <circle cx="85" cy="460" r="95" fill="url(#sphereGradLeft)" />
+
+          {/* Sphere 1: Center Floating Sphere (overlaps organically into the white section with shadow) */}
+          <circle
+            cx="330"
+            cy="325"
+            r="78"
+            fill="url(#sphereGradCenter)"
+            filter="url(#centerSphereShadow)"
+          />
+
+          {/* Sphere 3: Bottom-Right Corner (peeking into the white section) */}
+          <circle
+            cx="805"
+            cy="465"
+            r="68"
+            fill="url(#sphereGradRight)"
+          />
+        </svg>
+
+        {/* LEFT BRANDING CONTENT OVERLAY */}
+        <section className="login-left-pane-modern">
+          <div className="login-left-content-modern">
+            <div className="login-brand-top">
+              <img
+                src="/brand/veon-logo-yellow.svg"
+                alt="VEON"
+                className="login-veon-logo-modern"
+                width="125"
+                height="56"
+              />
             </div>
-          </section>
 
-          {/* RIGHT PART: Authentication Form */}
-          <section className="login-right-pane">
-            <div className="login-right-content">
-              {/* Header */}
-              <div className="login-form-header">
-                <div className="login-lock-badge">
-                  <Lock size={18} />
-                </div>
-                <h2>Operator Sign In</h2>
-                <p>Enter your authorization credentials to access the early-warning situational picture.</p>
+            <div className="login-headline-group">
+              <h1 className="login-welcome-title">WELCOME</h1>
+              <h2 className="login-headline-title">HORIZON 1440 · GEO-EW</h2>
+              <p className="login-welcome-desc">
+                Unified geopolitical risk surveillance, sovereign airspace integrity, and early-warning intelligence command across VEON operations.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* RIGHT WHITE FORM SECTION */}
+        <section className="login-right-pane-modern">
+          <div className="login-right-content-modern">
+            <div className="login-form-header-modern">
+              <h2>Sign in</h2>
+              <p>Enter your authorization credentials to access HORIZON 1440</p>
+            </div>
+
+            {error && (
+              <div className="login-error-pill" role="alert">
+                <AlertTriangle size={15} className="shrink-0 text-rose-600" />
+                <span>{error}</span>
               </div>
+            )}
 
-              {/* Error Banner */}
-              {error && (
-                <div className="login-error-banner" role="alert">
-                  <AlertTriangle size={18} className="error-icon" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="login-form">
-                {/* Username Input */}
-                <div className="form-field-group">
-                  <label htmlFor="login-username">Operator Username</label>
-                  <div className="input-wrap">
-                    <User size={17} className="field-icon" />
-                    <input
-                      id="login-username"
-                      type="text"
-                      required
-                      autoComplete="username"
-                      placeholder="Enter username (e.g. zohair)"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-
-                {/* Password Input */}
-                <div className="form-field-group">
-                  <div className="label-row">
-                    <label htmlFor="login-password">Operator Password</label>
-                  </div>
-                  <div className="input-wrap">
-                    <Lock size={17} className="field-icon" />
-                    <input
-                      id="login-password"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      autoComplete="current-password"
-                      placeholder="••••••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      className="eye-toggle-btn"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Session Checkbox & Quick Fill */}
-                <div className="form-options-row">
-                  <label className="remember-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={remember}
-                      onChange={(e) => setRemember(e.target.checked)}
-                      disabled={loading}
-                    />
-                    <span>Remember this device</span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleFillDemo}
-                    className="demo-fill-btn"
-                    title="Pre-fill default pilot credentials"
-                  >
-                    <Sparkles size={13} /> Quick Fill
-                  </button>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
+            <form onSubmit={handleSubmit} className="login-form-modern">
+              {/* User Name Field */}
+              <div className="input-field-modern">
+                <User size={18} className="field-icon-modern" />
+                <input
+                  id="login-username"
+                  type="text"
+                  required
+                  autoComplete="username"
+                  placeholder="User Name"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   disabled={loading}
-                  className="login-submit-btn"
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="input-field-modern">
+                <Lock size={18} className="field-icon-modern" />
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="show-toggle-modern"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {loading ? (
-                    <span className="loading-state">
-                      <span className="spinner-icon" />
-                      Verifying Credentials…
-                    </span>
-                  ) : (
-                    <span className="btn-content">
-                      <span>Authenticate & Enter Workspace</span>
-                      <ArrowRight size={17} className="arrow-icon" />
-                    </span>
-                  )}
+                  {showPassword ? 'HIDE' : 'SHOW'}
                 </button>
-              </form>
-            </div>
-          </section>
+              </div>
 
-        </div>
-      </main>
+              {/* Remember me & Quick Fill */}
+              <div className="options-row-modern">
+                <label className="remember-label-modern">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                    disabled={loading}
+                  />
+                  <span>Remember me</span>
+                </label>
 
-      {/* Bottom bar */}
-      <footer className="login-bottom-bar">
-        <span>© 2026 VEON Ltd. All Rights Reserved.</span>
-        <span>Corporate Affairs & Group Security Strategy</span>
-      </footer>
+                <button
+                  type="button"
+                  onClick={handleFillDemo}
+                  className="forgot-link-modern"
+                >
+                  Quick Fill (zohair)
+                </button>
+              </div>
+
+              {/* Primary Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="primary-signin-btn"
+              >
+                {loading ? 'Authenticating...' : 'Sign in'}
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

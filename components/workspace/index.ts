@@ -10,3 +10,5 @@ export * from './brief-archive';
 export * from './validation-lab';
 export * from './situation-filters';
 export * from './country-domains';
+export * from './aviation-radar';
+export * from './aviation-maps-visualizer';

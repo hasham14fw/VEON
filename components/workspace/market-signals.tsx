@@ -47,14 +47,37 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
   const [tickerLoading, setTickerLoading] = useState(false);
 
   const quotes = w.data?.quotes || [];
-  const list = instruments.filter(
+
+  // Merge all instruments and Finnhub pairs so all pairs display in the watchlist
+  const allInstruments: typeof instruments = [...instruments];
+  for (const fq of finnhubQuotes) {
+    if (!allInstruments.some((inst) => inst.id === fq.instrumentId)) {
+      allInstruments.push({
+        id: fq.instrumentId,
+        name: fq.name,
+        family: fq.instrumentId.includes('DERIV')
+          ? 'Local derivatives'
+          : fq.instrumentId.includes('-')
+          ? 'Oil futures'
+          : 'FX spot',
+        unit: fq.unit,
+        exchange: fq.source || 'Finnhub Live',
+        market: fq.market,
+        threshold: 2,
+        five: 5,
+        direction: 'absolute',
+      });
+    }
+  }
+
+  const list = allInstruments.filter(
     (i) =>
       (family === 'All instruments' || i.family === family) &&
       (market === 'All markets' || market === 'Global'
         ? market === 'All markets' || i.market === 'Global'
         : i.market === market || i.market === 'Global')
   );
-  const instrument = instruments.find((i) => i.id === picked)!;
+  const instrument = allInstruments.find((i) => i.id === picked) || allInstruments[0] || instruments[0];
 
   // Synthesize history if ledger has only 1 point or is empty
   function generateHistory(q: Quote, daysCount: number): Quote[] {
@@ -314,9 +337,9 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
           </div>
         )}
 
-        {/* Live Market Pair Cards */}
+        {/* Live Market Pair Cards - strictly 6 pairs as requested */}
         <div className="massive-cards-grid">
-          {filteredFinnhubQuotes.map((q) => {
+          {filteredFinnhubQuotes.slice(0, 6).map((q) => {
             const isPositive = q.changePercent >= 0;
             return (
               <div
