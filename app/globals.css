@@ -4414,6 +4414,19 @@ legend {
   font-weight: 700;
 }
 
+.theatre-quick-strip button.theatre-open-hub {
+  background: #ECFDF5;
+  border-color: #6EE7B7;
+  color: #059669;
+  font-weight: 600;
+}
+
+.theatre-quick-strip button.theatre-open-hub:hover {
+  background: #D1FAE5;
+  border-color: #10B981;
+  color: #047857;
+}
+
 /* Viewport Layout */
 .maps-viewport-layout {
   display: grid;

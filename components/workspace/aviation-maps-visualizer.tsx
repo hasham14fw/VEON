@@ -52,31 +52,139 @@ export interface AviationZoneGeo {
 }
 
 // Pre-parse sovereign country polygons for 3D Globe visualization
+// Accurate sovereign airspace boundaries to prevent map distortion and false zone overlaps
+export const IRAN_SOVEREIGN_AIRSPACE: Array<{lat: number; lon: number}> = [
+  // Northwest (Azerbaijan/Armenia/Turkey border)
+  {lat: 38.4, lon: 48.9},
+  {lat: 38.9, lon: 45.6},
+  {lat: 39.7, lon: 44.6},
+  {lat: 38.5, lon: 44.3},
+  {lat: 37.5, lon: 44.8},
+  {lat: 36.3, lon: 45.4},
+  {lat: 35.3, lon: 46.0},
+  {lat: 34.3, lon: 45.6},
+  {lat: 33.1, lon: 46.2},
+  {lat: 32.2, lon: 47.4},
+  {lat: 31.0, lon: 47.7},
+  {lat: 30.0, lon: 48.5},
+  // Northern Persian Gulf shoreline (Strictly North of Persian Gulf - Over 150km North of Dubai/UAE)
+  {lat: 29.9, lon: 50.1},
+  {lat: 28.9, lon: 50.8},
+  {lat: 27.8, lon: 52.1},
+  {lat: 27.5, lon: 52.6},
+  {lat: 26.9, lon: 53.6},
+  {lat: 26.5, lon: 54.8},
+  {lat: 27.1, lon: 56.3}, // Bandar Abbas / North of Strait of Hormuz
+  {lat: 26.8, lon: 57.0},
+  {lat: 25.6, lon: 57.8}, // Jask (Gulf of Oman north coast)
+  {lat: 25.4, lon: 59.2},
+  {lat: 25.3, lon: 60.6}, // Chabahar
+  {lat: 25.1, lon: 61.6}, // Gwadar Bay border
+  // East Border (Pakistan & Afghanistan)
+  {lat: 26.5, lon: 62.3},
+  {lat: 27.8, lon: 62.4},
+  {lat: 29.0, lon: 61.5},
+  {lat: 30.8, lon: 61.8},
+  {lat: 31.9, lon: 60.9},
+  {lat: 34.7, lon: 60.8},
+  {lat: 35.6, lon: 61.1},
+  // Northeast & North (Turkmenistan border & Caspian Sea)
+  {lat: 36.5, lon: 61.2},
+  {lat: 37.5, lon: 58.6},
+  {lat: 37.8, lon: 56.5},
+  {lat: 37.4, lon: 54.5},
+  {lat: 36.9, lon: 54.0},
+  {lat: 36.7, lon: 52.6},
+  {lat: 36.8, lon: 50.8},
+  {lat: 37.5, lon: 49.5},
+];
+
+export const AFGHANISTAN_SOVEREIGN_AIRSPACE: Array<{lat: number; lon: number}> = [
+  {lat: 35.6, lon: 61.2},
+  {lat: 36.5, lon: 65.0},
+  {lat: 37.2, lon: 67.3},
+  {lat: 37.5, lon: 69.5},
+  {lat: 37.0, lon: 71.5},
+  {lat: 38.4, lon: 73.5},
+  {lat: 37.1, lon: 74.9},
+  {lat: 36.0, lon: 71.8},
+  {lat: 34.5, lon: 71.1},
+  {lat: 33.7, lon: 70.0},
+  {lat: 32.5, lon: 69.3},
+  {lat: 31.5, lon: 66.8},
+  {lat: 30.5, lon: 66.3},
+  {lat: 29.5, lon: 64.2},
+  {lat: 29.4, lon: 61.8},
+  {lat: 30.8, lon: 61.8},
+  {lat: 31.9, lon: 60.9},
+  {lat: 34.7, lon: 60.8},
+];
+
+export const UAE_SOVEREIGN_TERRITORY: Array<{lat: number; lon: number}> = [
+  {lat: 24.12, lon: 51.75},
+  {lat: 24.11, lon: 52.73},
+  {lat: 24.08, lon: 53.65},
+  {lat: 24.47, lon: 54.37},
+  {lat: 25.20, lon: 55.27}, // Dubai
+  {lat: 25.40, lon: 55.45},
+  {lat: 25.79, lon: 55.95},
+  {lat: 26.02, lon: 56.08},
+  {lat: 25.61, lon: 56.28},
+  {lat: 25.03, lon: 56.36},
+  {lat: 24.21, lon: 55.76},
+  {lat: 22.70, lon: 55.20},
+  {lat: 22.85, lon: 53.80},
+  {lat: 24.00, lon: 51.60},
+];
+
 interface CountryPoly {
   name: string;
   isVeonMarket: boolean;
   polygons: Array<Array<{lat: number; lon: number}>>;
 }
 
-const PARSED_COUNTRIES: CountryPoly[] = (world as Array<{name: string; d: string}>).map((c) => ({
-  name: c.name,
-  isVeonMarket: ['Ukraine', 'Kazakhstan', 'Uzbekistan', 'Pakistan', 'Bangladesh'].includes(c.name),
-  polygons: c.d
-    .split('Z')
-    .filter(Boolean)
-    .map((sub) =>
-      sub
-        .split(/[ML]/)
-        .filter(Boolean)
-        .map((p) => {
-          const [x, y] = p.split(',').map(Number);
-          return {
-            lat: 90 - (y * 180) / 300,
-            lon: x / 2 - 180,
-          };
-        })
-    ),
-}));
+const PARSED_COUNTRIES: CountryPoly[] = (world as Array<{name: string; d: string}>).map((c) => {
+  if (c.name === 'Iran') {
+    return {
+      name: 'Iran',
+      isVeonMarket: false,
+      polygons: [IRAN_SOVEREIGN_AIRSPACE],
+    };
+  }
+  if (c.name === 'Afghanistan') {
+    return {
+      name: 'Afghanistan',
+      isVeonMarket: false,
+      polygons: [AFGHANISTAN_SOVEREIGN_AIRSPACE],
+    };
+  }
+  if (c.name === 'United Arab Emirates') {
+    return {
+      name: 'United Arab Emirates',
+      isVeonMarket: false,
+      polygons: [UAE_SOVEREIGN_TERRITORY],
+    };
+  }
+  return {
+    name: c.name,
+    isVeonMarket: ['Ukraine', 'Kazakhstan', 'Uzbekistan', 'Pakistan', 'Bangladesh'].includes(c.name),
+    polygons: c.d
+      .split('Z')
+      .filter(Boolean)
+      .map((sub) =>
+        sub
+          .split(/[ML]/)
+          .filter(Boolean)
+          .map((p) => {
+            const [x, y] = p.split(',').map(Number);
+            return {
+              lat: 90 - (y * 180) / 300,
+              lon: x / 2 - 180,
+            };
+          })
+      ),
+  };
+});
 
 // Helper to extract sovereign border points for No-Fly Zone boundaries
 function getCountryBoundary(countryName: string): Array<{lat: number; lon: number}> {
@@ -104,7 +212,16 @@ export const WORLD_SEAS = [
 ];
 
 // Major Countries, States and Regional Hubs for 3D Globe Visualization
-export const MAJOR_COUNTRIES_AND_STATES = [
+export interface RegionItem {
+  name: string;
+  lat: number;
+  lon: number;
+  isMarket?: boolean;
+  isCity?: boolean;
+  isOpenAirspace?: boolean;
+}
+
+export const MAJOR_COUNTRIES_AND_STATES: RegionItem[] = [
   {name: 'Ukraine', lat: 49.0, lon: 31.3, isMarket: true},
   {name: 'Kyiv', lat: 50.45, lon: 30.52, isCity: true},
   {name: 'Odesa', lat: 46.48, lon: 30.73, isCity: true},
@@ -126,8 +243,9 @@ export const MAJOR_COUNTRIES_AND_STATES = [
   {name: 'Poland', lat: 51.91, lon: 19.14},
   {name: 'Turkey', lat: 38.96, lon: 35.24},
   {name: 'Saudi Arabia', lat: 23.88, lon: 45.07},
+  {name: 'United Arab Emirates', lat: 24.4, lon: 54.3},
+  {name: 'Dubai', lat: 25.2, lon: 55.27, isCity: true, isOpenAirspace: true},
   {name: 'Iran', lat: 32.42, lon: 53.68},
-  {name: 'Dubai', lat: 25.2, lon: 55.27, isCity: true},
   {name: 'India', lat: 20.59, lon: 78.96},
   {name: 'China', lat: 35.86, lon: 104.19},
   {name: 'United States', lat: 37.09, lon: -95.71},
@@ -213,7 +331,7 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
   {
     id: 'NFZ-IR-01',
     name: 'Middle East & Persian Gulf Transit Corridor',
-    firCode: 'OIIX / OKAC / OSTT',
+    firCode: 'OIIX (Tehran FIR)',
     lat: 32.4,
     lon: 53.6,
     radiusKm: 580,
@@ -225,18 +343,18 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     altFactor: 0.055,
     notamReference: 'FAA KICZ NOTAM A0012/26 / EASA Alert',
     rationale:
-      'Elevated ballistic and drone strike threat vectors. Commercial carriers routing through northern Caspian transit corridor.',
+      'Elevated ballistic and drone strike threat vectors in Tehran FIR (OIIX). Sovereign UAE and Dubai (OMAE) airspace is completely open and operates normal international arrivals and departures.',
     detourImpactMinutes: 65,
     effectiveDate: '2024-04-14 (Updated Sep 2026)',
     riskFactor: 86,
     rangeBounds: {
-      latMin: 24.0,
-      latMax: 39.5,
+      latMin: 25.1,
+      latMax: 39.7,
       lonMin: 44.0,
       lonMax: 63.3,
-      label: '24.0°N – 39.5°N · 44.0°E – 63.3°E',
+      label: '25.1°N – 39.7°N · 44.0°E – 63.3°E (Tehran FIR · Excludes Open UAE/Dubai)',
     },
-    boundaryPoints: getCountryBoundary('Iran'),
+    boundaryPoints: IRAN_SOVEREIGN_AIRSPACE,
   },
   {
     id: 'NFZ-AF-01',
@@ -264,7 +382,7 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 74.9,
       label: '29.4°N – 38.5°N · 60.5°E – 74.9°E',
     },
-    boundaryPoints: getCountryBoundary('Afghanistan'),
+    boundaryPoints: AFGHANISTAN_SOVEREIGN_AIRSPACE,
   },
   {
     id: 'NFZ-PK-01',
@@ -615,7 +733,37 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
       for (const item of MAJOR_COUNTRIES_AND_STATES) {
         const cp = projectAlt(item.lat, item.lon, 0);
         if (cp.visible && cp.depth > 0.22) {
-          if (item.isCity) {
+          if (item.isOpenAirspace) {
+            // Prominent Green Marker for Open Airspace Hub (Dubai DXB)
+            ctx.beginPath();
+            ctx.arc(cp.x, cp.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#10B981';
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Glow / Pulse Ring
+            ctx.beginPath();
+            ctx.arc(cp.x, cp.y, 7.5, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Open Airspace Status Tag
+            const tag = 'Dubai (DXB) · AIRSPACE OPEN';
+            ctx.font = 'bold 9.5px Inter, sans-serif';
+            const tagW = ctx.measureText(tag).width;
+
+            ctx.fillStyle = 'rgba(6, 78, 59, 0.9)';
+            ctx.strokeStyle = '#10B981';
+            ctx.lineWidth = 1;
+            ctx.fillRect(cp.x + 8, cp.y - 12, tagW + 8, 15);
+            ctx.strokeRect(cp.x + 8, cp.y - 12, tagW + 8, 15);
+
+            ctx.fillStyle = '#6EE7B7';
+            ctx.fillText(tag, cp.x + 12, cp.y - 1);
+          } else if (item.isCity) {
             ctx.beginPath();
             ctx.arc(cp.x, cp.y, 2.5, 0, Math.PI * 2);
             ctx.fillStyle = item.isMarket ? '#FACC15' : '#FFFFFF';
@@ -820,6 +968,14 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
           onClick={() => focusOnTheatre(32.4, 53.6, 6, 'NFZ-IR-01')}
         >
           🇮🇷 Persian Gulf
+        </button>
+        <button
+          type="button"
+          className="theatre-open-hub"
+          onClick={() => focusOnTheatre(25.2, 55.27, 7)}
+          title="Dubai International (DXB) - Open Airspace Civil Hub"
+        >
+          🟢 Dubai (DXB · Open)
         </button>
         <button
           type="button"
