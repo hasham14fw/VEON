@@ -465,38 +465,6 @@ export default function Home() {
               <SituationFilters value={filters} onChange={setFilters} />
               <CountryDomains w={w} situations={filtered} market={market} />
 
-              {/* High-Visibility Google Maps Intelligence Card on Overview */}
-              <div className="overview-google-maps-card">
-                <div className="overview-maps-banner">
-                  <div className="banner-left">
-                    <span className="red-pulse-indicator" />
-                    <div>
-                      <div className="banner-title-row">
-                        <h3>Google Maps Tactical Airspace Intelligence</h3>
-                        <span className="hud-badge-red">7 NO-FLY ZONES (RED)</span>
-                      </div>
-                      <p>
-                        Full Google Maps integration tracking sovereign boundaries, major cities, and active flight
-                        closure corridors across Ukraine, Black Sea, Middle East & South Asia.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="banner-actions">
-                    <Button
-                      className="open-google-maps-btn"
-                      onClick={() => {
-                        setView('Google Maps');
-                        window.scrollTo({top: 0, behavior: 'smooth'});
-                      }}
-                    >
-                      <Globe size={15} />
-                      <span>Open Google Maps</span>
-                      <ChevronRight size={14} />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
               <div className="overview-grid">
                 {/* Situation Landscape Matrix */}
                 <section className="panel matrix-panel">

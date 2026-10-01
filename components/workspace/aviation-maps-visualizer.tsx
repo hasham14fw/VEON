@@ -17,8 +17,6 @@ import {
   ChevronRight,
   Eye,
   Search,
-  Maximize2,
-  ExternalLink,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogTitle, DialogDescription} from '@/components/ui/dialog';
@@ -36,6 +34,8 @@ export interface AviationZoneGeo {
   status: 'Total Airspace Closure' | 'Restricted Corridor' | 'Military Buffer' | 'Active Advisory';
   severity: 'Critical' | 'Warning' | 'Elevated';
   altitude: string;
+  altShort: string;
+  altFactor: number;
   notamReference: string;
   rationale: string;
   detourImpactMinutes: number;
@@ -48,6 +48,7 @@ export interface AviationZoneGeo {
     lonMax: number;
     label: string;
   };
+  boundaryPoints: Array<{lat: number; lon: number}>;
 }
 
 // Pre-parse sovereign country polygons for 3D Globe visualization
@@ -76,6 +77,12 @@ const PARSED_COUNTRIES: CountryPoly[] = (world as Array<{name: string; d: string
         })
     ),
 }));
+
+// Helper to extract sovereign border points for No-Fly Zone boundaries
+function getCountryBoundary(countryName: string): Array<{lat: number; lon: number}> {
+  const found = PARSED_COUNTRIES.find((c) => c.name === countryName);
+  return found && found.polygons.length > 0 ? found.polygons[0] : [];
+}
 
 // Named Seas and Oceans for 3D Globe Visualization
 export const WORLD_SEAS = [
@@ -132,7 +139,7 @@ export const MAJOR_COUNTRIES_AND_STATES = [
   {name: 'Australia', lat: -25.27, lon: 133.77},
 ];
 
-// 7 Active Geopolitical No-Fly Zones with Border of Ranges in RED and Altitude in ORANGE
+// 7 Active Geopolitical No-Fly Zones with Proper Multi-Point Boundaries (RED) and Altitude Ceilings (ORANGE)
 export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
   {
     id: 'NFZ-UA-01',
@@ -145,6 +152,8 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     status: 'Total Airspace Closure',
     severity: 'Critical',
     altitude: 'SFC – UNL (Surface to Unlimited)',
+    altShort: 'SFC – UNL',
+    altFactor: 0.08,
     notamReference: 'EASA CZIB-2022-01R8 / ICAO NOTAM A0422/22',
     rationale:
       'Active military conflict, hostile surface-to-air missile threat, electronic jamming. Complete civil aviation prohibition.',
@@ -158,6 +167,7 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 40.2,
       label: '44.3°N – 52.4°N · 22.1°E – 40.2°E',
     },
+    boundaryPoints: getCountryBoundary('Ukraine'),
   },
   {
     id: 'NFZ-BS-01',
@@ -170,6 +180,8 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     status: 'Restricted Corridor',
     severity: 'Critical',
     altitude: 'SFC – UNL (Surface to Unlimited)',
+    altShort: 'SFC – UNL',
+    altFactor: 0.075,
     notamReference: 'ICAO EUR Bulletin / Romanian CAA Adv',
     rationale:
       'Naval combat missile testing, anti-ship ballistic operations, severe GPS spoofing across international maritime airspace.',
@@ -183,6 +195,20 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 41.5,
       label: '41.0°N – 46.5°N · 27.5°E – 41.5°E',
     },
+    boundaryPoints: [
+      {lat: 46.5, lon: 30.7},
+      {lat: 46.6, lon: 32.5},
+      {lat: 45.3, lon: 36.5},
+      {lat: 44.7, lon: 37.8},
+      {lat: 43.5, lon: 39.8},
+      {lat: 41.6, lon: 41.6},
+      {lat: 41.0, lon: 39.7},
+      {lat: 42.0, lon: 35.1},
+      {lat: 41.2, lon: 29.0},
+      {lat: 42.5, lon: 27.5},
+      {lat: 44.2, lon: 28.7},
+      {lat: 45.4, lon: 29.8},
+    ],
   },
   {
     id: 'NFZ-IR-01',
@@ -195,6 +221,8 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     status: 'Restricted Corridor',
     severity: 'Critical',
     altitude: 'Prohibited Below FL320',
+    altShort: 'BELOW FL320',
+    altFactor: 0.055,
     notamReference: 'FAA KICZ NOTAM A0012/26 / EASA Alert',
     rationale:
       'Elevated ballistic and drone strike threat vectors. Commercial carriers routing through northern Caspian transit corridor.',
@@ -208,6 +236,7 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 63.3,
       label: '24.0°N – 39.5°N · 44.0°E – 63.3°E',
     },
+    boundaryPoints: getCountryBoundary('Iran'),
   },
   {
     id: 'NFZ-AF-01',
@@ -220,6 +249,8 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     status: 'Active Advisory',
     severity: 'Warning',
     altitude: 'Prohibited Below FL320',
+    altShort: 'BELOW FL320',
+    altFactor: 0.05,
     notamReference: 'FAA SFAR 115 / EASA Conflict Bulletin',
     rationale:
       'Total absence of civil air traffic control radar and emergency ground intervention. Flights to Tashkent bypass Kabul FIR.',
@@ -233,6 +264,7 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 74.9,
       label: '29.4°N – 38.5°N · 60.5°E – 74.9°E',
     },
+    boundaryPoints: getCountryBoundary('Afghanistan'),
   },
   {
     id: 'NFZ-PK-01',
@@ -245,6 +277,8 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     status: 'Military Buffer',
     severity: 'Warning',
     altitude: 'GND – FL280 Tactical Segments',
+    altShort: 'BELOW FL280',
+    altFactor: 0.045,
     notamReference: 'CAA Pakistan NOTAM C0145/26',
     rationale:
       'Cross-border military alert areas and low-level tactical air operations. Civil departures diverted via southern Karachi routes.',
@@ -258,6 +292,18 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 77.8,
       label: '30.0°N – 37.1°N · 69.2°E – 77.8°E',
     },
+    boundaryPoints: [
+      {lat: 36.8, lon: 74.8},
+      {lat: 35.5, lon: 76.2},
+      {lat: 34.6, lon: 74.8},
+      {lat: 33.6, lon: 74.2},
+      {lat: 32.5, lon: 74.6},
+      {lat: 31.6, lon: 74.5},
+      {lat: 31.5, lon: 72.8},
+      {lat: 32.8, lon: 71.5},
+      {lat: 34.2, lon: 71.3},
+      {lat: 36.0, lon: 71.8},
+    ],
   },
   {
     id: 'NFZ-KZ-01',
@@ -270,6 +316,8 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     status: 'Active Advisory',
     severity: 'Elevated',
     altitude: 'Military Operations Area (SFC – FL290)',
+    altShort: 'BELOW FL290',
+    altFactor: 0.045,
     notamReference: 'KazAeroNavigatsia Advisory 2026/04',
     rationale:
       'Increased radar surveillance and periodic rocket launch orbital safety corridors. Flights monitored via Atyrau transit gates.',
@@ -283,6 +331,15 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 55.0,
       label: '44.5°N – 50.0°N · 46.5°E – 55.0°E',
     },
+    boundaryPoints: [
+      {lat: 49.2, lon: 47.5},
+      {lat: 47.8, lon: 51.5},
+      {lat: 46.5, lon: 53.5},
+      {lat: 44.5, lon: 51.5},
+      {lat: 44.0, lon: 49.2},
+      {lat: 45.2, lon: 47.6},
+      {lat: 47.0, lon: 47.8},
+    ],
   },
   {
     id: 'NFZ-BD-01',
@@ -295,6 +352,8 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     status: 'Active Advisory',
     severity: 'Elevated',
     altitude: 'Below FL260 in Border FIR Overlaps',
+    altShort: 'BELOW FL260',
+    altFactor: 0.04,
     notamReference: 'CAAB Dhaka Circular A02/26',
     rationale:
       'Armed clashes and air activity along the Arakan corridor. Civil departures from Cox’s Bazar follow strict southern vectoring.',
@@ -308,6 +367,14 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
       lonMax: 94.5,
       label: '19.0°N – 24.2°N · 89.0°E – 94.5°E',
     },
+    boundaryPoints: [
+      {lat: 23.5, lon: 91.5},
+      {lat: 21.6, lon: 92.5},
+      {lat: 20.2, lon: 92.6},
+      {lat: 19.5, lon: 91.0},
+      {lat: 21.2, lon: 90.0},
+      {lat: 22.8, lon: 91.2},
+    ],
   },
 ];
 
@@ -383,7 +450,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
     setGoogleZoom(7);
   };
 
-  // 3D Globe Render Loop - WITH FULL PROPER COUNTRIES, BORDERS, SEAS, AND RED RANGE BOUNDS (NO CIRCLES!)
+  // 3D Globe Render Loop - WITH EXACT NO-FLY BOUNDARIES (RED) & ALTITUDE CEILINGS (ORANGE)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || activeTab === 'google') return;
@@ -400,7 +467,8 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
     };
     window.addEventListener('resize', handleResize);
 
-    const project = (lat: number, lon: number) => {
+    // 3D Projection with Altitude Layering Support
+    const projectAlt = (lat: number, lon: number, altFactor = 0) => {
       const phi = (lat * Math.PI) / 180;
       const theta = ((lon + rotationRef.current.y) * Math.PI) / 180;
       const rotX = rotationRef.current.x;
@@ -412,7 +480,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
       const y1 = y0 * Math.cos(rotX) - z0 * Math.sin(rotX);
       const z1 = y0 * Math.sin(rotX) + z0 * Math.cos(rotX);
 
-      const R = Math.min(width, height) * 0.38 * globeZoom;
+      const R = Math.min(width, height) * 0.38 * globeZoom * (1 + altFactor);
       const cx = width / 2;
       const cy = height / 2;
 
@@ -481,7 +549,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         ctx.beginPath();
         let drawn = false;
         for (let lon = -180; lon <= 180; lon += 4) {
-          const pt = project(lat, lon);
+          const pt = projectAlt(lat, lon, 0);
           if (pt.visible) {
             if (!drawn) {
               ctx.moveTo(pt.x, pt.y);
@@ -501,10 +569,9 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         const isMarket = country.isVeonMarket;
 
         for (const poly of country.polygons) {
-          // Check if at least some vertices are visible on the front hemisphere
           let hasVisible = false;
           for (let i = 0; i < poly.length; i += 3) {
-            if (project(poly[i].lat, poly[i].lon).visible) {
+            if (projectAlt(poly[i].lat, poly[i].lon, 0).visible) {
               hasVisible = true;
               break;
             }
@@ -513,7 +580,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
 
           ctx.beginPath();
           poly.forEach((pt, idx) => {
-            const p = project(pt.lat, pt.lon);
+            const p = projectAlt(pt.lat, pt.lon, 0);
             if (idx === 0) ctx.moveTo(p.x, p.y);
             else ctx.lineTo(p.x, p.y);
           });
@@ -521,9 +588,9 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
 
           // Fill Sovereign Landmass
           if (isMarket) {
-            ctx.fillStyle = 'rgba(2, 132, 199, 0.85)'; // Highlighted VEON market landmass
+            ctx.fillStyle = 'rgba(2, 132, 199, 0.85)';
           } else {
-            ctx.fillStyle = 'rgba(28, 52, 40, 0.88)'; // Rich sovereign continental landmass
+            ctx.fillStyle = 'rgba(28, 52, 40, 0.88)';
           }
           ctx.fill();
 
@@ -534,9 +601,9 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         }
       }
 
-      // 7. PROPER VISUALIZATION OF SEAS & OCEANS (Typography & Wave Badges)
+      // 7. PROPER VISUALIZATION OF SEAS & OCEANS
       for (const sea of WORLD_SEAS) {
-        const sp = project(sea.lat, sea.lon);
+        const sp = projectAlt(sea.lat, sea.lon, 0);
         if (sp.visible && sp.depth > 0.2) {
           ctx.fillStyle = 'rgba(186, 230, 253, 0.8)';
           ctx.font = 'italic 10.5px Inter, sans-serif';
@@ -546,21 +613,18 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
 
       // 8. PROPER VISUALIZATION OF COUNTRIES, STATES & CITIES
       for (const item of MAJOR_COUNTRIES_AND_STATES) {
-        const cp = project(item.lat, item.lon);
+        const cp = projectAlt(item.lat, item.lon, 0);
         if (cp.visible && cp.depth > 0.22) {
           if (item.isCity) {
-            // City Dot Marker
             ctx.beginPath();
             ctx.arc(cp.x, cp.y, 2.5, 0, Math.PI * 2);
             ctx.fillStyle = item.isMarket ? '#FACC15' : '#FFFFFF';
             ctx.fill();
 
-            // City Label
             ctx.fillStyle = '#FFFFFF';
             ctx.font = '10px Inter, sans-serif';
             ctx.fillText(item.name, cp.x + 5, cp.y + 3);
           } else {
-            // Country / State Label
             ctx.fillStyle = item.isMarket ? '#38BDF8' : '#E2E8F0';
             ctx.font = item.isMarket ? 'bold 11px Inter, sans-serif' : '10px Inter, sans-serif';
             ctx.fillText(item.name, cp.x - 16, cp.y - 4);
@@ -568,80 +632,97 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         }
       }
 
-      // 9. NO CIRCLES - PROPER BORDER OF RANGES IN RED FOR NO-FLY ZONES
+      // 9. PROPER BOUNDARIES FOR NO-FLY ZONES (RED) & ALTITUDE RESTRICTIONS (ORANGE)
       displayedZones.forEach((zone) => {
-        const {latMin, latMax, lonMin, lonMax} = zone.rangeBounds;
-        const p1 = project(latMax, lonMin); // Top-Left
-        const p2 = project(latMax, lonMax); // Top-Right
-        const p3 = project(latMin, lonMax); // Bottom-Right
-        const p4 = project(latMin, lonMin); // Bottom-Left
-
-        // Center point for tags
-        const pCenter = project(zone.lat, zone.lon);
-
-        if (!p1.visible && !p2.visible && !p3.visible && !p4.visible && !pCenter.visible) {
-          return;
-        }
+        const pts = zone.boundaryPoints;
+        if (!pts || pts.length === 0) return;
 
         const isSelected = selectedZone?.id === zone.id;
 
-        // Draw RED Border of Range (Box / Polygon)
+        // Check if any point in the zone boundary is facing the camera
+        let anyVisible = false;
+        for (let i = 0; i < pts.length; i += 2) {
+          if (projectAlt(pts[i].lat, pts[i].lon, 0).visible) {
+            anyVisible = true;
+            break;
+          }
+        }
+        if (!anyVisible) return;
+
+        // A. SURFACE NO-FLY BOUNDARY IN RED
         ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineTo(p3.x, p3.y);
-        ctx.lineTo(p4.x, p4.y);
+        pts.forEach((pt, idx) => {
+          const pGnd = projectAlt(pt.lat, pt.lon, 0);
+          if (idx === 0) ctx.moveTo(pGnd.x, pGnd.y);
+          else ctx.lineTo(pGnd.x, pGnd.y);
+        });
         ctx.closePath();
-
         ctx.strokeStyle = '#DC2626';
-        ctx.lineWidth = isSelected ? 3.2 : 2.0;
-        ctx.fillStyle = isSelected ? 'rgba(220, 38, 38, 0.4)' : 'rgba(220, 38, 38, 0.2)';
+        ctx.lineWidth = isSelected ? 3.4 : 2.0;
+        ctx.stroke();
+        ctx.fillStyle = isSelected ? 'rgba(220, 38, 38, 0.42)' : 'rgba(220, 38, 38, 0.22)';
         ctx.fill();
-        ctx.stroke();
 
-        // Corner Range Brackets in RED
-        const bracketLen = 7;
-        ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = 2.8;
-
-        // TL Corner
+        // B. ALTITUDE RESTRICTION CEILING BOUNDARY IN ORANGE
         ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y + bracketLen);
-        ctx.lineTo(p1.x, p1.y);
-        ctx.lineTo(p1.x + bracketLen, p1.y);
+        pts.forEach((pt, idx) => {
+          const pCeil = projectAlt(pt.lat, pt.lon, zone.altFactor);
+          if (idx === 0) ctx.moveTo(pCeil.x, pCeil.y);
+          else ctx.lineTo(pCeil.x, pCeil.y);
+        });
+        ctx.closePath();
+        ctx.strokeStyle = '#EA580C';
+        ctx.lineWidth = isSelected ? 2.6 : 1.6;
+        ctx.setLineDash([5, 3]);
         ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = isSelected ? 'rgba(249, 115, 22, 0.25)' : 'rgba(249, 115, 22, 0.12)';
+        ctx.fill();
 
-        // TR Corner
-        ctx.beginPath();
-        ctx.moveTo(p2.x - bracketLen, p2.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineTo(p2.x, p2.y + bracketLen);
-        ctx.stroke();
+        // C. VERTICAL 3D AIRSPACE WALL PILLARS (CONNECTING RED GROUND TO ORANGE ALTITUDE)
+        const step = Math.max(1, Math.floor(pts.length / 8));
+        for (let i = 0; i < pts.length; i += step) {
+          const pGnd = projectAlt(pts[i].lat, pts[i].lon, 0);
+          const pCeil = projectAlt(pts[i].lat, pts[i].lon, zone.altFactor);
+          if (pGnd.visible || pCeil.visible) {
+            ctx.beginPath();
+            ctx.moveTo(pGnd.x, pGnd.y);
+            ctx.lineTo(pCeil.x, pCeil.y);
+            ctx.strokeStyle = '#F97316';
+            ctx.lineWidth = 1.3;
+            ctx.stroke();
+          }
+        }
 
-        // BR Corner
-        ctx.beginPath();
-        ctx.moveTo(p3.x, p3.y - bracketLen);
-        ctx.lineTo(p3.x, p3.y);
-        ctx.lineTo(p3.x - bracketLen, p3.y);
-        ctx.stroke();
-
-        // BL Corner
-        ctx.beginPath();
-        ctx.moveTo(p4.x + bracketLen, p4.y);
-        ctx.lineTo(p4.x, p4.y);
-        ctx.lineTo(p4.x, p4.y - bracketLen);
-        ctx.stroke();
-
-        // Zone ID & ORANGE Altitude Tag on Range Box
-        if (pCenter.visible && pCenter.depth > 0.15) {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = isSelected ? 'bold 11px Inter, sans-serif' : '10px Inter, sans-serif';
-          ctx.fillText(zone.id, pCenter.x - 20, pCenter.y - 4);
-
-          // ORANGE Altitude Tag
-          ctx.fillStyle = '#FB923C';
+        // D. ELEVATED ORANGE ALTITUDE RESTRICTION TAG
+        const pCenterCeil = projectAlt(zone.lat, zone.lon, zone.altFactor);
+        if (pCenterCeil.visible && pCenterCeil.depth > 0.12) {
+          const altText = `ALT: ${zone.altShort}`;
           ctx.font = 'bold 9.5px monospace';
-          ctx.fillText(zone.altitude.split(' ')[0], pCenter.x - 20, pCenter.y + 9);
+          const txtW = ctx.measureText(altText).width;
+
+          ctx.fillStyle = 'rgba(255, 247, 237, 0.95)';
+          ctx.strokeStyle = '#FDBA74';
+          ctx.lineWidth = 1;
+          ctx.fillRect(pCenterCeil.x - txtW / 2 - 5, pCenterCeil.y - 18, txtW + 10, 15);
+          ctx.strokeRect(pCenterCeil.x - txtW / 2 - 5, pCenterCeil.y - 18, txtW + 10, 15);
+
+          ctx.fillStyle = '#EA580C';
+          ctx.fillText(altText, pCenterCeil.x - txtW / 2, pCenterCeil.y - 7);
+        }
+
+        // E. GROUND RED NO-FLY ZONE BADGE
+        const pCenterGnd = projectAlt(zone.lat, zone.lon, 0);
+        if (pCenterGnd.visible && pCenterGnd.depth > 0.12) {
+          const idText = `${zone.id}`;
+          ctx.font = 'bold 10px monospace';
+          const txtW = ctx.measureText(idText).width;
+
+          ctx.fillStyle = '#DC2626';
+          ctx.fillRect(pCenterGnd.x - txtW / 2 - 5, pCenterGnd.y - 7, txtW + 10, 14);
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(idText, pCenterGnd.x - txtW / 2, pCenterGnd.y + 4);
         }
       });
 
@@ -895,13 +976,13 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
           </div>
         )}
 
-        {/* 2. 3D Tactical Globe View - With Proper Countries, Borders, Seas, and Red Border of Ranges (NO CIRCLES!) */}
+        {/* 2. 3D Tactical Globe View - Proper Boundaries for No-Fly Zones (RED) & Altitude Restrictions (ORANGE) */}
         {(activeTab === 'globe' || activeTab === 'dual') && (
           <div className="globe-canvas-card">
             <div className="globe-header-overlay">
               <div className="globe-tag">
                 <Globe size={14} />
-                <span>3D GLOBE // COUNTRIES, BORDERS, SEAS & RED RANGE BORDERS</span>
+                <span>3D GLOBE // SOVEREIGN NO-FLY BORDERS (RED) & ALTITUDE CEILINGS (ORANGE)</span>
               </div>
               <div className="globe-quick-controls">
                 <button
