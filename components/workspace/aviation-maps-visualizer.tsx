@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogTitle, DialogDescription} from '@/components/ui/dialog';
+import world from '@/public/data/world.json';
 import type {Work} from './use-workspace';
 
 export interface AviationZoneGeo {
@@ -48,6 +49,88 @@ export interface AviationZoneGeo {
     label: string;
   };
 }
+
+// Pre-parse sovereign country polygons for 3D Globe visualization
+interface CountryPoly {
+  name: string;
+  isVeonMarket: boolean;
+  polygons: Array<Array<{lat: number; lon: number}>>;
+}
+
+const PARSED_COUNTRIES: CountryPoly[] = (world as Array<{name: string; d: string}>).map((c) => ({
+  name: c.name,
+  isVeonMarket: ['Ukraine', 'Kazakhstan', 'Uzbekistan', 'Pakistan', 'Bangladesh'].includes(c.name),
+  polygons: c.d
+    .split('Z')
+    .filter(Boolean)
+    .map((sub) =>
+      sub
+        .split(/[ML]/)
+        .filter(Boolean)
+        .map((p) => {
+          const [x, y] = p.split(',').map(Number);
+          return {
+            lat: 90 - (y * 180) / 300,
+            lon: x / 2 - 180,
+          };
+        })
+    ),
+}));
+
+// Named Seas and Oceans for 3D Globe Visualization
+export const WORLD_SEAS = [
+  {name: 'Atlantic Ocean', lat: 26.0, lon: -40.0},
+  {name: 'South Atlantic', lat: -22.0, lon: -18.0},
+  {name: 'Pacific Ocean', lat: 18.0, lon: -155.0},
+  {name: 'Indian Ocean', lat: -12.0, lon: 74.0},
+  {name: 'Arctic Ocean', lat: 82.0, lon: 0.0},
+  {name: 'Black Sea', lat: 43.5, lon: 34.5},
+  {name: 'Mediterranean Sea', lat: 35.5, lon: 18.0},
+  {name: 'Caspian Sea', lat: 42.0, lon: 51.0},
+  {name: 'Red Sea', lat: 21.0, lon: 38.0},
+  {name: 'Persian Gulf', lat: 26.5, lon: 52.0},
+  {name: 'Arabian Sea', lat: 15.0, lon: 64.0},
+  {name: 'Bay of Bengal', lat: 15.0, lon: 88.0},
+  {name: 'South China Sea', lat: 12.0, lon: 114.0},
+  {name: 'Baltic Sea', lat: 58.0, lon: 20.0},
+  {name: 'North Sea', lat: 56.0, lon: 3.5},
+];
+
+// Major Countries, States and Regional Hubs for 3D Globe Visualization
+export const MAJOR_COUNTRIES_AND_STATES = [
+  {name: 'Ukraine', lat: 49.0, lon: 31.3, isMarket: true},
+  {name: 'Kyiv', lat: 50.45, lon: 30.52, isCity: true},
+  {name: 'Odesa', lat: 46.48, lon: 30.73, isCity: true},
+  {name: 'Lviv', lat: 49.84, lon: 24.03, isCity: true},
+  {name: 'Kazakhstan', lat: 48.0, lon: 66.9, isMarket: true},
+  {name: 'Astana', lat: 51.16, lon: 71.43, isCity: true},
+  {name: 'Almaty', lat: 43.25, lon: 76.95, isCity: true},
+  {name: 'Uzbekistan', lat: 41.37, lon: 64.58, isMarket: true},
+  {name: 'Tashkent', lat: 41.31, lon: 69.28, isCity: true},
+  {name: 'Pakistan', lat: 30.37, lon: 69.34, isMarket: true},
+  {name: 'Islamabad', lat: 33.72, lon: 73.06, isCity: true},
+  {name: 'Karachi', lat: 24.86, lon: 67.01, isCity: true},
+  {name: 'Lahore', lat: 31.55, lon: 74.36, isCity: true},
+  {name: 'Bangladesh', lat: 23.68, lon: 90.35, isMarket: true},
+  {name: 'Dhaka', lat: 23.81, lon: 90.41, isCity: true},
+  {name: 'United Kingdom', lat: 55.37, lon: -3.43},
+  {name: 'Germany', lat: 51.16, lon: 10.45},
+  {name: 'France', lat: 46.22, lon: 2.21},
+  {name: 'Poland', lat: 51.91, lon: 19.14},
+  {name: 'Turkey', lat: 38.96, lon: 35.24},
+  {name: 'Saudi Arabia', lat: 23.88, lon: 45.07},
+  {name: 'Iran', lat: 32.42, lon: 53.68},
+  {name: 'Dubai', lat: 25.2, lon: 55.27, isCity: true},
+  {name: 'India', lat: 20.59, lon: 78.96},
+  {name: 'China', lat: 35.86, lon: 104.19},
+  {name: 'United States', lat: 37.09, lon: -95.71},
+  {name: 'Canada', lat: 56.13, lon: -106.34},
+  {name: 'Brazil', lat: -14.23, lon: -51.92},
+  {name: 'South Africa', lat: -30.55, lon: 22.93},
+  {name: 'Egypt', lat: 26.82, lon: 30.8},
+  {name: 'Japan', lat: 36.2, lon: 138.25},
+  {name: 'Australia', lat: -25.27, lon: 133.77},
+];
 
 // 7 Active Geopolitical No-Fly Zones with Border of Ranges in RED and Altitude in ORANGE
 export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
@@ -300,7 +383,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
     setGoogleZoom(7);
   };
 
-  // 3D Globe Render Loop - WITH BORDER OF RANGES IN RED (NO CIRCLES!)
+  // 3D Globe Render Loop - WITH FULL PROPER COUNTRIES, BORDERS, SEAS, AND RED RANGE BOUNDS (NO CIRCLES!)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || activeTab === 'google') return;
@@ -333,51 +416,71 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
       const cx = width / 2;
       const cy = height / 2;
 
-      return {
-        x: cx + x0 * R,
-        y: cy - y1 * R,
-        visible: z1 > 0,
-        depth: z1,
-      };
+      if (z1 >= 0) {
+        return {
+          x: cx + x0 * R,
+          y: cy - y1 * R,
+          visible: true,
+          depth: z1,
+        };
+      } else {
+        const len = Math.hypot(x0, -y1) || 1;
+        return {
+          x: cx + (x0 / len) * R,
+          y: cy + (-y1 / len) * R,
+          visible: false,
+          depth: z1,
+        };
+      }
     };
 
     const renderGlobe = () => {
       ctx.clearRect(0, 0, width, height);
 
       if (autoRotate && !isDraggingGlobe.current) {
-        rotationRef.current.y += 0.22;
+        rotationRef.current.y += 0.2;
       }
 
       const R = Math.min(width, height) * 0.38 * globeZoom;
       const cx = width / 2;
       const cy = height / 2;
 
-      // Space Background
-      ctx.fillStyle = '#060B14';
+      // 1. Deep Space Backdrop with Stars
+      ctx.fillStyle = '#050B14';
       ctx.fillRect(0, 0, width, height);
 
-      // Globe Ocean Gradient
-      const oceanGrad = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
-      oceanGrad.addColorStop(0, '#0F2744');
-      oceanGrad.addColorStop(0.7, '#071626');
-      oceanGrad.addColorStop(1, '#030A12');
-      ctx.fillStyle = oceanGrad;
+      // 2. Atmospheric Halo
+      const haloGrad = ctx.createRadialGradient(cx, cy, R * 0.95, cx, cy, R * 1.08);
+      haloGrad.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+      haloGrad.addColorStop(0.6, 'rgba(56, 189, 248, 0.15)');
+      haloGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = haloGrad;
       ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.arc(cx, cy, R * 1.08, 0, Math.PI * 2);
       ctx.fill();
 
-      // Atmospheric Atmosphere Halo
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      // 3. Globe Sphere Disk Clipping
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.clip();
 
-      // Graticule Latitude/Longitude Lines
+      // 4. Oceans & Seas Deep Water Gradient
+      const oceanGrad = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, R * 0.1, cx, cy, R);
+      oceanGrad.addColorStop(0, '#0F3057');
+      oceanGrad.addColorStop(0.55, '#0B2545');
+      oceanGrad.addColorStop(0.85, '#071A31');
+      oceanGrad.addColorStop(1, '#040F1E');
+      ctx.fillStyle = oceanGrad;
+      ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+      // 5. Graticule Latitude/Longitude Lines
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.lineWidth = 0.8;
       for (let lat = -60; lat <= 60; lat += 30) {
         ctx.beginPath();
         let drawn = false;
-        for (let lon = -180; lon <= 180; lon += 5) {
+        for (let lon = -180; lon <= 180; lon += 4) {
           const pt = project(lat, lon);
           if (pt.visible) {
             if (!drawn) {
@@ -393,7 +496,79 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         ctx.stroke();
       }
 
-      // NO CIRCLES - DRAW BORDER OF RANGES IN RED (POLYGONAL ENVELOPE)
+      // 6. PROPER VISUALIZATION OF COUNTRIES, STATES & SOVEREIGN BORDERS
+      for (const country of PARSED_COUNTRIES) {
+        const isMarket = country.isVeonMarket;
+
+        for (const poly of country.polygons) {
+          // Check if at least some vertices are visible on the front hemisphere
+          let hasVisible = false;
+          for (let i = 0; i < poly.length; i += 3) {
+            if (project(poly[i].lat, poly[i].lon).visible) {
+              hasVisible = true;
+              break;
+            }
+          }
+          if (!hasVisible) continue;
+
+          ctx.beginPath();
+          poly.forEach((pt, idx) => {
+            const p = project(pt.lat, pt.lon);
+            if (idx === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.closePath();
+
+          // Fill Sovereign Landmass
+          if (isMarket) {
+            ctx.fillStyle = 'rgba(2, 132, 199, 0.85)'; // Highlighted VEON market landmass
+          } else {
+            ctx.fillStyle = 'rgba(28, 52, 40, 0.88)'; // Rich sovereign continental landmass
+          }
+          ctx.fill();
+
+          // Stroke Sovereign Country Borders
+          ctx.strokeStyle = isMarket ? '#38BDF8' : 'rgba(148, 163, 184, 0.45)';
+          ctx.lineWidth = isMarket ? 1.6 : 0.65;
+          ctx.stroke();
+        }
+      }
+
+      // 7. PROPER VISUALIZATION OF SEAS & OCEANS (Typography & Wave Badges)
+      for (const sea of WORLD_SEAS) {
+        const sp = project(sea.lat, sea.lon);
+        if (sp.visible && sp.depth > 0.2) {
+          ctx.fillStyle = 'rgba(186, 230, 253, 0.8)';
+          ctx.font = 'italic 10.5px Inter, sans-serif';
+          ctx.fillText(sea.name, sp.x - 24, sp.y);
+        }
+      }
+
+      // 8. PROPER VISUALIZATION OF COUNTRIES, STATES & CITIES
+      for (const item of MAJOR_COUNTRIES_AND_STATES) {
+        const cp = project(item.lat, item.lon);
+        if (cp.visible && cp.depth > 0.22) {
+          if (item.isCity) {
+            // City Dot Marker
+            ctx.beginPath();
+            ctx.arc(cp.x, cp.y, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = item.isMarket ? '#FACC15' : '#FFFFFF';
+            ctx.fill();
+
+            // City Label
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.fillText(item.name, cp.x + 5, cp.y + 3);
+          } else {
+            // Country / State Label
+            ctx.fillStyle = item.isMarket ? '#38BDF8' : '#E2E8F0';
+            ctx.font = item.isMarket ? 'bold 11px Inter, sans-serif' : '10px Inter, sans-serif';
+            ctx.fillText(item.name, cp.x - 16, cp.y - 4);
+          }
+        }
+      }
+
+      // 9. NO CIRCLES - PROPER BORDER OF RANGES IN RED FOR NO-FLY ZONES
       displayedZones.forEach((zone) => {
         const {latMin, latMax, lonMin, lonMax} = zone.rangeBounds;
         const p1 = project(latMax, lonMin); // Top-Left
@@ -401,7 +576,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         const p3 = project(latMin, lonMax); // Bottom-Right
         const p4 = project(latMin, lonMin); // Bottom-Left
 
-        // Center point for labels
+        // Center point for tags
         const pCenter = project(zone.lat, zone.lon);
 
         if (!p1.visible && !p2.visible && !p3.visible && !p4.visible && !pCenter.visible) {
@@ -419,15 +594,15 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         ctx.closePath();
 
         ctx.strokeStyle = '#DC2626';
-        ctx.lineWidth = isSelected ? 3 : 1.8;
-        ctx.fillStyle = isSelected ? 'rgba(220, 38, 38, 0.35)' : 'rgba(220, 38, 38, 0.15)';
+        ctx.lineWidth = isSelected ? 3.2 : 2.0;
+        ctx.fillStyle = isSelected ? 'rgba(220, 38, 38, 0.4)' : 'rgba(220, 38, 38, 0.2)';
         ctx.fill();
         ctx.stroke();
 
         // Corner Range Brackets in RED
-        const bracketLen = 6;
+        const bracketLen = 7;
         ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2.8;
 
         // TL Corner
         ctx.beginPath();
@@ -461,14 +636,27 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         if (pCenter.visible && pCenter.depth > 0.15) {
           ctx.fillStyle = '#FFFFFF';
           ctx.font = isSelected ? 'bold 11px Inter, sans-serif' : '10px Inter, sans-serif';
-          ctx.fillText(zone.id, pCenter.x - 18, pCenter.y - 4);
+          ctx.fillText(zone.id, pCenter.x - 20, pCenter.y - 4);
 
           // ORANGE Altitude Tag
           ctx.fillStyle = '#FB923C';
-          ctx.font = 'bold 9px monospace';
-          ctx.fillText(zone.altitude.split(' ')[0], pCenter.x - 18, pCenter.y + 8);
+          ctx.font = 'bold 9.5px monospace';
+          ctx.fillText(zone.altitude.split(' ')[0], pCenter.x - 20, pCenter.y + 9);
         }
       });
+
+      // 10. Sphere Specular Light & 3D Curvature Gloss
+      const glossGrad = ctx.createRadialGradient(cx - R * 0.45, cy - R * 0.45, R * 0.1, cx, cy, R);
+      glossGrad.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+      glossGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');
+      glossGrad.addColorStop(0.8, 'rgba(0, 0, 0, 0.15)');
+      glossGrad.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+      ctx.fillStyle = glossGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore(); // Restore from globe disk clipping
 
       animFrameRef.current = requestAnimationFrame(renderGlobe);
     };
@@ -707,13 +895,13 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
           </div>
         )}
 
-        {/* 2. 3D Tactical Globe View - With Red Border of Ranges (NO CIRCLES) */}
+        {/* 2. 3D Tactical Globe View - With Proper Countries, Borders, Seas, and Red Border of Ranges (NO CIRCLES!) */}
         {(activeTab === 'globe' || activeTab === 'dual') && (
           <div className="globe-canvas-card">
             <div className="globe-header-overlay">
               <div className="globe-tag">
                 <Globe size={14} />
-                <span>3D TACTICAL AIRSPACE GLOBE // BORDER OF RANGES (RED)</span>
+                <span>3D GLOBE // COUNTRIES, BORDERS, SEAS & RED RANGE BORDERS</span>
               </div>
               <div className="globe-quick-controls">
                 <button
