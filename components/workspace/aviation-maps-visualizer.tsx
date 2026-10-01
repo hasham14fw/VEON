@@ -11,27 +11,17 @@ import {
   Compass,
   Play,
   Pause,
-  RotateCcw,
   ZoomIn,
   ZoomOut,
-  Clock,
   MapPin,
-  ExternalLink,
   ChevronRight,
-  Shield,
-  Activity,
-  Filter,
-  CheckCircle2,
-  X,
-  FileDown,
-  Navigation,
   Eye,
-  Radio,
   Search,
+  Maximize2,
+  ExternalLink,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogTitle, DialogDescription} from '@/components/ui/dialog';
-import world from '@/public/data/world.json';
 import type {Work} from './use-workspace';
 
 export interface AviationZoneGeo {
@@ -50,21 +40,16 @@ export interface AviationZoneGeo {
   detourImpactMinutes: number;
   effectiveDate: string;
   riskFactor: number;
-  x: number;
-  y: number;
-  svgX: number;
-  svgY: number;
-  radiusSvg: number;
+  rangeBounds: {
+    latMin: number;
+    latMax: number;
+    lonMin: number;
+    lonMax: number;
+    label: string;
+  };
 }
 
-// Convert Lat/Lon to SVG equirectangular coordinates
-function geoToSvg(lat: number, lon: number) {
-  const x = Math.round((((lon + 180) % 360) * 2) * 10) / 10;
-  const y = Math.round(((90 - lat) * (300 / 180)) * 10) / 10;
-  return {x, y, svgX: x, svgY: y};
-}
-
-// 7 Active Geopolitical No-Fly Zones in RED
+// 7 Active Geopolitical No-Fly Zones with Border of Ranges in RED and Altitude in ORANGE
 export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
   {
     id: 'NFZ-UA-01',
@@ -83,8 +68,13 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     detourImpactMinutes: 145,
     effectiveDate: '2022-02-24 (Active)',
     riskFactor: 98,
-    ...geoToSvg(49.0, 31.3),
-    radiusSvg: 28,
+    rangeBounds: {
+      latMin: 44.3,
+      latMax: 52.4,
+      lonMin: 22.1,
+      lonMax: 40.2,
+      label: '44.3°N – 52.4°N · 22.1°E – 40.2°E',
+    },
   },
   {
     id: 'NFZ-BS-01',
@@ -96,15 +86,20 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     market: 'Global',
     status: 'Restricted Corridor',
     severity: 'Critical',
-    altitude: 'SFC – UNL',
+    altitude: 'SFC – UNL (Surface to Unlimited)',
     notamReference: 'ICAO EUR Bulletin / Romanian CAA Adv',
     rationale:
       'Naval combat missile testing, anti-ship ballistic operations, severe GPS spoofing across international maritime airspace.',
     detourImpactMinutes: 55,
     effectiveDate: '2022-03-01 (Active)',
     riskFactor: 90,
-    ...geoToSvg(43.8, 34.5),
-    radiusSvg: 20,
+    rangeBounds: {
+      latMin: 41.0,
+      latMax: 46.5,
+      lonMin: 27.5,
+      lonMax: 41.5,
+      label: '41.0°N – 46.5°N · 27.5°E – 41.5°E',
+    },
   },
   {
     id: 'NFZ-IR-01',
@@ -123,8 +118,13 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     detourImpactMinutes: 65,
     effectiveDate: '2024-04-14 (Updated Sep 2026)',
     riskFactor: 86,
-    ...geoToSvg(32.4, 53.6),
-    radiusSvg: 24,
+    rangeBounds: {
+      latMin: 24.0,
+      latMax: 39.5,
+      lonMin: 44.0,
+      lonMax: 63.3,
+      label: '24.0°N – 39.5°N · 44.0°E – 63.3°E',
+    },
   },
   {
     id: 'NFZ-AF-01',
@@ -143,8 +143,13 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     detourImpactMinutes: 45,
     effectiveDate: '2021-08-18 (Standing Advisory)',
     riskFactor: 72,
-    ...geoToSvg(33.9, 67.7),
-    radiusSvg: 21,
+    rangeBounds: {
+      latMin: 29.4,
+      latMax: 38.5,
+      lonMin: 60.5,
+      lonMax: 74.9,
+      label: '29.4°N – 38.5°N · 60.5°E – 74.9°E',
+    },
   },
   {
     id: 'NFZ-PK-01',
@@ -163,8 +168,13 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     detourImpactMinutes: 35,
     effectiveDate: '2026-05-10 (Continuous Review)',
     riskFactor: 64,
-    ...geoToSvg(33.9, 73.8),
-    radiusSvg: 16,
+    rangeBounds: {
+      latMin: 30.0,
+      latMax: 37.1,
+      lonMin: 69.2,
+      lonMax: 77.8,
+      label: '30.0°N – 37.1°N · 69.2°E – 77.8°E',
+    },
   },
   {
     id: 'NFZ-KZ-01',
@@ -176,15 +186,20 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     market: 'Kazakhstan',
     status: 'Active Advisory',
     severity: 'Elevated',
-    altitude: 'Military Operations Area Advisory',
+    altitude: 'Military Operations Area (SFC – FL290)',
     notamReference: 'KazAeroNavigatsia Advisory 2026/04',
     rationale:
       'Increased radar surveillance and periodic rocket launch orbital safety corridors. Flights monitored via Atyrau transit gates.',
     detourImpactMinutes: 25,
     effectiveDate: '2026-02-15 (Periodic Review)',
     riskFactor: 58,
-    ...geoToSvg(47.1, 51.9),
-    radiusSvg: 18,
+    rangeBounds: {
+      latMin: 44.5,
+      latMax: 50.0,
+      lonMin: 46.5,
+      lonMax: 55.0,
+      label: '44.5°N – 50.0°N · 46.5°E – 55.0°E',
+    },
   },
   {
     id: 'NFZ-BD-01',
@@ -203,8 +218,13 @@ export const GEO_NO_FLY_ZONES: AviationZoneGeo[] = [
     detourImpactMinutes: 20,
     effectiveDate: '2024-03-01 (Continuous Monitoring)',
     riskFactor: 52,
-    ...geoToSvg(21.5, 92.2),
-    radiusSvg: 14,
+    rangeBounds: {
+      latMin: 19.0,
+      latMax: 24.2,
+      lonMin: 89.0,
+      lonMax: 94.5,
+      label: '19.0°N – 24.2°N · 89.0°E – 94.5°E',
+    },
   },
 ];
 
@@ -247,7 +267,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         const found = GEO_NO_FLY_ZONES.find((z) => z.id === zoneId);
         if (found) setSelectedZone(found);
       } else {
-        const found = GEO_NO_FLY_ZONES.find((z) => Math.abs(z.lat - lat) < 1 && Math.abs(z.lon - lon) < 1);
+        const found = GEO_NO_FLY_ZONES.find((z) => Math.abs(z.lat - lat) < 1.5 && Math.abs(z.lon - lon) < 1.5);
         if (found) setSelectedZone(found);
       }
 
@@ -280,7 +300,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
     setGoogleZoom(7);
   };
 
-  // 3D Globe Render Loop
+  // 3D Globe Render Loop - WITH BORDER OF RANGES IN RED (NO CIRCLES!)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || activeTab === 'google') return;
@@ -296,8 +316,6 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
       height = canvas.height = canvas.parentElement.clientHeight;
     };
     window.addEventListener('resize', handleResize);
-
-    let pulsePhase = 0;
 
     const project = (lat: number, lon: number) => {
       const phi = (lat * Math.PI) / 180;
@@ -329,7 +347,6 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
       if (autoRotate && !isDraggingGlobe.current) {
         rotationRef.current.y += 0.22;
       }
-      pulsePhase += 0.05;
 
       const R = Math.min(width, height) * 0.38 * globeZoom;
       const cx = width / 2;
@@ -376,40 +393,80 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         ctx.stroke();
       }
 
-      // RED NO-FLY ZONES ON 3D GLOBE
+      // NO CIRCLES - DRAW BORDER OF RANGES IN RED (POLYGONAL ENVELOPE)
       displayedZones.forEach((zone) => {
-        const pt = project(zone.lat, zone.lon);
-        if (!pt.visible || pt.depth <= -0.1) return;
+        const {latMin, latMax, lonMin, lonMax} = zone.rangeBounds;
+        const p1 = project(latMax, lonMin); // Top-Left
+        const p2 = project(latMax, lonMax); // Top-Right
+        const p3 = project(latMin, lonMax); // Bottom-Right
+        const p4 = project(latMin, lonMin); // Bottom-Left
+
+        // Center point for labels
+        const pCenter = project(zone.lat, zone.lon);
+
+        if (!p1.visible && !p2.visible && !p3.visible && !p4.visible && !pCenter.visible) {
+          return;
+        }
 
         const isSelected = selectedZone?.id === zone.id;
-        const scaleFactor = Math.max(0.4, 0.6 + pt.depth * 0.5);
 
-        // Animated Red Threat Radius Ring
-        const currentPulseRadius = (16 + Math.sin(pulsePhase * 2 + zone.riskFactor) * 6) * scaleFactor;
+        // Draw RED Border of Range (Box / Polygon)
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, currentPulseRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = isSelected ? 3 : 1.5;
-        ctx.fillStyle = isSelected ? 'rgba(239, 68, 68, 0.45)' : 'rgba(239, 68, 68, 0.22)';
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.lineTo(p4.x, p4.y);
+        ctx.closePath();
+
+        ctx.strokeStyle = '#DC2626';
+        ctx.lineWidth = isSelected ? 3 : 1.8;
+        ctx.fillStyle = isSelected ? 'rgba(220, 38, 38, 0.35)' : 'rgba(220, 38, 38, 0.15)';
         ctx.fill();
         ctx.stroke();
 
-        // Core Red Threat Epicenter
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 5 * scaleFactor, 0, Math.PI * 2);
-        ctx.fillStyle = '#DC2626';
-        ctx.fill();
+        // Corner Range Brackets in RED
+        const bracketLen = 6;
+        ctx.strokeStyle = '#EF4444';
+        ctx.lineWidth = 2.5;
 
+        // TL Corner
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 2 * scaleFactor, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fill();
+        ctx.moveTo(p1.x, p1.y + bracketLen);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.lineTo(p1.x + bracketLen, p1.y);
+        ctx.stroke();
 
-        // Red Zone ID Tag
-        if (pt.depth > 0.2 || isSelected) {
+        // TR Corner
+        ctx.beginPath();
+        ctx.moveTo(p2.x - bracketLen, p2.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p2.x, p2.y + bracketLen);
+        ctx.stroke();
+
+        // BR Corner
+        ctx.beginPath();
+        ctx.moveTo(p3.x, p3.y - bracketLen);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.lineTo(p3.x - bracketLen, p3.y);
+        ctx.stroke();
+
+        // BL Corner
+        ctx.beginPath();
+        ctx.moveTo(p4.x + bracketLen, p4.y);
+        ctx.lineTo(p4.x, p4.y);
+        ctx.lineTo(p4.x, p4.y - bracketLen);
+        ctx.stroke();
+
+        // Zone ID & ORANGE Altitude Tag on Range Box
+        if (pCenter.visible && pCenter.depth > 0.15) {
           ctx.fillStyle = '#FFFFFF';
           ctx.font = isSelected ? 'bold 11px Inter, sans-serif' : '10px Inter, sans-serif';
-          ctx.fillText(zone.id, pt.x + 8, pt.y + 3);
+          ctx.fillText(zone.id, pCenter.x - 18, pCenter.y - 4);
+
+          // ORANGE Altitude Tag
+          ctx.fillStyle = '#FB923C';
+          ctx.font = 'bold 9px monospace';
+          ctx.fillText(zone.altitude.split(' ')[0], pCenter.x - 18, pCenter.y + 8);
         }
       });
 
@@ -534,9 +591,9 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         </button>
       </div>
 
-      {/* Main Display Area */}
+      {/* Main Display Area: Clean Google Map (NO OVERLAPPING HUDs) */}
       <div className={`maps-viewport-layout layout-${activeTab}`}>
-        {/* 1. Official Google Maps View with Red Threat HUD */}
+        {/* 1. Official Google Maps View */}
         {(activeTab === 'google' || activeTab === 'dual') && (
           <div className="google-style-map-card">
             {/* Google Maps Layer & Zoom Controls Toolbar */}
@@ -616,7 +673,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
               </div>
             </div>
 
-            {/* Google Map Embedded Frame */}
+            {/* Google Map Embedded Frame - Completely Unobstructed */}
             <div className="google-map-embed-wrapper">
               <iframe
                 src={`https://maps.google.com/maps?q=${searchTarget}&t=${googleMapType}&z=${googleZoom}&output=embed`}
@@ -626,86 +683,37 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
                 referrerPolicy="no-referrer-when-downgrade"
                 title="Google Maps Tactical Airspace Intelligence"
               />
-
-              {/* Floating RED No-Fly Zone Tactical HUD on Google Maps */}
-              <div className="floating-red-threat-hud">
-                <div className="threat-hud-header">
-                  <div className="threat-header-left">
-                    <span className="red-pulse-indicator" />
-                    <strong>ACTIVE NO-FLY ZONES (RED)</strong>
-                  </div>
-                  <span className="hud-badge-red">7 RESTRICTED</span>
-                </div>
-
-                <div className="threat-zone-quicklist">
-                  {displayedZones.map((zone) => {
-                    const isSelected = activeZone?.id === zone.id;
-                    return (
-                      <div
-                        key={zone.id}
-                        className={`threat-zone-chip ${isSelected ? 'selected' : ''}`}
-                        onClick={() => handleSelectZone(zone)}
-                      >
-                        <div className="chip-left">
-                          <span className="chip-bullet-red" />
-                          <div className="chip-info">
-                            <span className="chip-id">{zone.id}</span>
-                            <span className="chip-name">{zone.name}</span>
-                          </div>
-                        </div>
-                        <div className="chip-meta">
-                          <span className="chip-detour">+{zone.detourImpactMinutes}m</span>
-                          <span className="chip-risk">{zone.riskFactor}%</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Threat Card Details */}
-                {activeZone && (
-                  <div className="selected-threat-dossier">
-                    <div className="dossier-headline">
-                      <div>
-                        <h4>{activeZone.name}</h4>
-                        <div className="dossier-coords">
-                          {activeZone.lat.toFixed(1)}° N, {activeZone.lon.toFixed(1)}° E · {activeZone.radiusKm} km radius
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="inspect-btn-red"
-                        onClick={() => setModalZone(activeZone)}
-                      >
-                        <Eye size={12} className="mr-1" /> Dossier
-                      </Button>
-                    </div>
-
-                    <div className="dossier-grid">
-                      <div className="dossier-cell">
-                        <small>ALTITUDE</small>
-                        <strong>{activeZone.altitude}</strong>
-                      </div>
-                      <div className="dossier-cell">
-                        <small>NOTAM REF</small>
-                        <code>{activeZone.notamReference}</code>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
+
+            {/* Map Status Bar showing active range border */}
+            {activeZone && (
+              <div className="map-bottom-status-strip">
+                <div className="status-strip-left">
+                  <span className="status-dot-red" />
+                  <span className="status-label">ACTIVE SECTOR:</span>
+                  <strong className="status-title">{activeZone.name}</strong>
+                  <span className="status-altitude-tag">
+                    <ShieldAlert size={12} className="inline mr-1" />
+                    ALTITUDE: {activeZone.altitude}
+                  </span>
+                </div>
+                <div className="status-strip-right">
+                  <span className="status-range-border">
+                    BORDER OF RANGE: <code>{activeZone.rangeBounds.label}</code>
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* 2. 3D Tactical Globe View */}
+        {/* 2. 3D Tactical Globe View - With Red Border of Ranges (NO CIRCLES) */}
         {(activeTab === 'globe' || activeTab === 'dual') && (
           <div className="globe-canvas-card">
             <div className="globe-header-overlay">
               <div className="globe-tag">
                 <Globe size={14} />
-                <span>3D TACTICAL AIRSPACE GLOBE // RED THREAT RADAR</span>
+                <span>3D TACTICAL AIRSPACE GLOBE // BORDER OF RANGES (RED)</span>
               </div>
               <div className="globe-quick-controls">
                 <button
@@ -762,6 +770,113 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
         )}
       </div>
 
+      {/* DEDICATED ACTIVE NO-FLY ZONES (RED) SECTION - PLACED DIRECTLY BELOW THE MAP */}
+      <section className="active-no-fly-zones-section">
+        <div className="zones-section-header">
+          <div className="zones-header-title-wrap">
+            <span className="red-pulse-indicator" />
+            <div>
+              <h2>ACTIVE NO-FLY ZONES (RED)</h2>
+              <p>
+                Sovereign conflict airspace boundaries showing exact border of ranges and restricted flight altitudes.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="badge-altitude-orange">
+              <ShieldAlert size={12} className="inline mr-1" />
+              ALTITUDE RESTRICTIONS: ORANGE
+            </span>
+            <span className="hud-badge-red">7 RESTRICTED CORRIDORS</span>
+          </div>
+        </div>
+
+        {/* Grid of All 7 Active No-Fly Zones */}
+        <div className="no-fly-zones-grid">
+          {displayedZones.map((zone) => {
+            const isSelected = activeZone?.id === zone.id;
+            return (
+              <div
+                key={zone.id}
+                className={`zone-range-card ${isSelected ? 'selected' : ''}`}
+                onClick={() => handleSelectZone(zone)}
+              >
+                {/* Card Header */}
+                <div className="zone-card-top">
+                  <div className="flex items-center gap-2">
+                    <span className="zone-id-tag">{zone.id}</span>
+                    <span className="zone-status-pill">{zone.status}</span>
+                  </div>
+                  <span className="zone-risk-score">RISK {zone.riskFactor}%</span>
+                </div>
+
+                {/* Zone Title */}
+                <h3 className="zone-card-title">{zone.name}</h3>
+
+                {/* BORDER OF RANGE (RED) */}
+                <div className="range-border-container">
+                  <div className="range-border-header">
+                    <span className="range-border-tag">BORDER OF RANGE (RED)</span>
+                    <span className="range-radius-tag">{zone.radiusKm} km radius</span>
+                  </div>
+                  <div className="range-coords-value">{zone.rangeBounds.label}</div>
+                  <div className="range-center-coords">
+                    Center: {zone.lat.toFixed(1)}° N, {zone.lon.toFixed(1)}° E
+                  </div>
+                </div>
+
+                {/* ALTITUDE RESTRICTIONS (ORANGE) */}
+                <div className="altitude-orange-box">
+                  <div className="altitude-box-title">
+                    <ShieldAlert size={13} className="text-orange-600 inline" />
+                    <span>ALTITUDE RESTRICTION</span>
+                  </div>
+                  <div className="altitude-box-value">{zone.altitude}</div>
+                </div>
+
+                {/* Operational Details */}
+                <div className="zone-card-footer-info">
+                  <div className="info-cell">
+                    <small>FIR CORRIDOR</small>
+                    <code>{zone.firCode}</code>
+                  </div>
+                  <div className="info-cell">
+                    <small>FLIGHT DETOUR</small>
+                    <strong className="text-red-600">+{zone.detourImpactMinutes} min</strong>
+                  </div>
+                </div>
+
+                {/* Card Action Buttons */}
+                <div className="zone-card-actions">
+                  <Button
+                    size="sm"
+                    className="zone-center-map-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      focusOnTheatre(zone.lat, zone.lon, 6, zone.id);
+                      window.scrollTo({top: 0, behavior: 'smooth'});
+                    }}
+                  >
+                    <MapPin size={12} className="mr-1" /> Center Map
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="zone-dossier-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setModalZone(zone);
+                    }}
+                  >
+                    <Eye size={12} className="mr-1" /> NOTAM Dossier
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Comprehensive Intelligence Modal for Selected Zone */}
       {modalZone && (
         <Dialog open={!!modalZone} onOpenChange={(open) => !open && setModalZone(null)}>
@@ -795,11 +910,25 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <h5 className="text-xs font-bold uppercase text-slate-700">Restricted Altitudes</h5>
-                <p className="text-sm text-slate-600 bg-red-50/50 p-2.5 rounded-lg border border-red-100 font-mono text-xs">
-                  {modalZone.altitude}
-                </p>
+              {/* BORDER OF RANGE IN MODAL (RED) */}
+              <div className="p-3.5 bg-red-50/60 border border-red-200 rounded-xl space-y-1">
+                <h5 className="text-[11px] font-bold uppercase text-red-700 tracking-wider">
+                  BORDER OF RANGE (COORDINATES)
+                </h5>
+                <div className="text-sm font-bold text-slate-900 font-mono">{modalZone.rangeBounds.label}</div>
+                <small className="text-xs text-slate-600 block">
+                  Perimeter Envelope: {modalZone.radiusKm} km radius centered at {modalZone.lat.toFixed(2)}° N,{' '}
+                  {modalZone.lon.toFixed(2)}° E
+                </small>
+              </div>
+
+              {/* ALTITUDE RESTRICTION IN MODAL (ORANGE) */}
+              <div className="p-3.5 bg-orange-50 border border-orange-200 rounded-xl space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-orange-700 tracking-wider">
+                  <ShieldAlert size={14} className="text-orange-600" />
+                  RESTRICTED ALTITUDES (ORANGE)
+                </div>
+                <p className="text-sm font-bold text-orange-900 font-mono">{modalZone.altitude}</p>
               </div>
 
               <div className="space-y-1">
@@ -828,6 +957,7 @@ export function AviationMapsVisualizer({w, market}: {w: Work; market?: string}) 
                 onClick={() => {
                   focusOnTheatre(modalZone.lat, modalZone.lon, 7, modalZone.id);
                   setModalZone(null);
+                  window.scrollTo({top: 0, behavior: 'smooth'});
                 }}
               >
                 <MapPin size={13} className="mr-1.5" /> Center on Google Map
