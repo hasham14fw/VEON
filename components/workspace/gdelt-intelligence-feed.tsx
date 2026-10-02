@@ -31,6 +31,13 @@ import {
   SlidersHorizontal,
   Play,
   Pause,
+  Bookmark,
+  FileText,
+  Fingerprint,
+  Copy,
+  Check,
+  Quote,
+  CheckCheck,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Dialog, DialogContent, DialogTitle, DialogDescription} from '@/components/ui/dialog';
@@ -40,14 +47,16 @@ import type {GdeltArticle, GdeltMarketSummary, GdeltIntelligenceFeedResponse} fr
 
 export function GdeltIntelligenceFeed({
   w,
-  market = 'All markets',
+  market = 'Pakistan',
   situations = [],
 }: {
   w: Work;
   market?: string;
   situations?: Situation[];
 }) {
-  const [selectedMarket, setSelectedMarket] = useState<string>(market);
+  const [selectedMarket, setSelectedMarket] = useState<string>(
+    market && market !== 'All markets' ? market : 'Pakistan'
+  );
   const [driverFilter, setDriverFilter] = useState<string>('All');
   const [threatFilter, setThreatFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -60,16 +69,12 @@ export function GdeltIntelligenceFeed({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Detail Modal & Attach state
+  // Detail Evidence Modal state
   const [inspectedArticle, setInspectedArticle] = useState<GdeltArticle | null>(null);
-  const [selectedArticleToAttach, setSelectedArticleToAttach] = useState<GdeltArticle | null>(null);
-  const [targetSituationId, setTargetSituationId] = useState<string>('');
-  const [attaching, setAttaching] = useState<boolean>(false);
-  const [attachSuccess, setAttachSuccess] = useState<string | null>(null);
 
   // Sync market prop
   useEffect(() => {
-    if (market) setSelectedMarket(market);
+    if (market && market !== 'All markets') setSelectedMarket(market);
   }, [market]);
 
   // Fetch GDELT feed
@@ -171,47 +176,6 @@ export function GdeltIntelligenceFeed({
     URL.revokeObjectURL(url);
   };
 
-  // Attach article as verified source evidence to a situation
-  const handleAttachEvidence = async () => {
-    if (!selectedArticleToAttach || !targetSituationId) return;
-    setAttaching(true);
-    setAttachSuccess(null);
-    try {
-      const res = await fetch('/api/gdelt', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          situationId: targetSituationId,
-          article: {
-            title: selectedArticleToAttach.title,
-            url: selectedArticleToAttach.url,
-            domain: selectedArticleToAttach.domain,
-            publishedAt: selectedArticleToAttach.publishedAt,
-          },
-        }),
-      });
-
-      const json = (await res.json()) as {
-        ok?: boolean;
-        error?: string;
-      };
-      if (res.ok && json.ok) {
-        setAttachSuccess(`Article attached to [${targetSituationId}] as verified evidence.`);
-        setTimeout(() => {
-          setSelectedArticleToAttach(null);
-          setAttachSuccess(null);
-          w.refresh?.();
-        }, 1300);
-      } else {
-        throw new Error(json.error || 'Failed to attach evidence');
-      }
-    } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to attach evidence');
-    } finally {
-      setAttaching(false);
-    }
-  };
-
   const summary = feedData?.summary;
   const sentiment = summary?.sentimentBreakdown;
   const hotspots = summary?.activeHotspots || [];
@@ -227,12 +191,12 @@ export function GdeltIntelligenceFeed({
           </div>
           <div>
             <div className="command-title-row">
-              <h3>GDELT 2.0 // GLOBAL GEOPOLITICAL INTELLIGENCE RADAR</h3>
+              <h3>ACTIVE CONFLICT // GEOPOLITICAL INTELLIGENCE RADAR</h3>
               <span className="status-chip-live">LIVE FEED ACTIVE</span>
               <span className="source-nlp-tag">TRANSLINGUAL NLP (100+ LANG)</span>
             </div>
             <p className="command-subtitle">
-              Real-time conflict event surveillance, telecommunications resilience, and regulatory sentiment tracking across VEON operating markets.
+              Real-time conflict surveillance, security intelligence, and operational risk tracking across surveillance scope.
             </p>
           </div>
         </div>
@@ -283,11 +247,10 @@ export function GdeltIntelligenceFeed({
         </div>
         <div className="market-nav-pills">
           {[
-            {name: 'All markets', code: 'ALL'},
-            {name: 'Ukraine', code: 'UA'},
             {name: 'Pakistan', code: 'PK'},
-            {name: 'Uzbekistan', code: 'UZ'},
+            {name: 'Ukraine', code: 'UA'},
             {name: 'Kazakhstan', code: 'KZ'},
+            {name: 'Uzbekistan', code: 'UZ'},
             {name: 'Bangladesh', code: 'BD'},
             {name: 'Global', code: 'GL'},
           ].map((item) => (
@@ -522,7 +485,7 @@ export function GdeltIntelligenceFeed({
           </div>
         </div>
       ) : viewMode === 'table' ? (
-        /* ANALYST DATA GRID / TABLE VIEW */
+        /* ANALYST DATA GRID / TABLE VIEW WITH VERIFIABLE EVIDENCE */
         <div className="gdelt-table-container">
           <table className="gdelt-data-table">
             <thead>
@@ -531,9 +494,9 @@ export function GdeltIntelligenceFeed({
                 <th>MARKET</th>
                 <th>SEVERITY</th>
                 <th>DRIVER</th>
-                <th>HEADLINE & SOURCE</th>
+                <th>HEADLINE & EVIDENCE LINK</th>
+                <th>PUBLISHER</th>
                 <th>TONE</th>
-                <th>RELEVANCE</th>
                 <th>ACTIONS</th>
               </tr>
             </thead>
@@ -567,12 +530,16 @@ export function GdeltIntelligenceFeed({
                       {art.isLive && <span className="tbl-live-tag">LIVE</span>}
                     </div>
                   </td>
+                  <td className="td-publisher">
+                    <span className="tbl-publisher-pill">
+                      {art.evidence?.publisher || art.domain}
+                    </span>
+                  </td>
                   <td>
                     <span className={`tbl-tone-pill ${art.toneScore < -2 ? 'tone-neg' : art.toneScore > 2 ? 'tone-pos' : 'tone-neu'}`}>
                       {art.toneScore < 0 ? art.toneScore : `+${art.toneScore}`}
                     </span>
                   </td>
-                  <td className="td-relevance">{art.relevanceScore}%</td>
                   <td className="td-actions">
                     <div className="tbl-action-buttons">
                       <Button
@@ -580,22 +547,19 @@ export function GdeltIntelligenceFeed({
                         variant="outline"
                         className="tbl-btn"
                         onClick={() => setInspectedArticle(art)}
-                        title="Inspect full intelligence assessment"
+                        title="Assess operational evidence"
                       >
                         <Eye size={12} />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="tbl-btn btn-attach"
-                        onClick={() => {
-                          setSelectedArticleToAttach(art);
-                          if (situations.length > 0) setTargetSituationId(situations[0].id);
-                        }}
-                        title="Attach as source evidence"
+                      <a
+                        href={art.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="tbl-btn inline-flex items-center justify-center p-1 text-slate-500 hover:text-sky-600"
+                        title="Open external news evidence link"
                       >
-                        <FileCheck size={12} />
-                      </Button>
+                        <ExternalLink size={12} />
+                      </a>
                     </div>
                   </td>
                 </tr>
@@ -604,12 +568,12 @@ export function GdeltIntelligenceFeed({
           </table>
         </div>
       ) : (
-        /* STREAM CARDS VIEW */
+        /* STREAM CARDS VIEW WITH REAL EVIDENCE DISPATCHES */
         <div className="gdelt-articles-grid">
           {loading && !feedData ? (
             <div className="gdelt-loading-state">
               <RefreshCw size={28} className="animate-spin text-sky-500" />
-              <p>Ingesting live geopolitical intelligence from GDELT 2.0 translingual pipeline...</p>
+              <p>Ingesting real-time geopolitical intelligence across surveillance scope...</p>
             </div>
           ) : processedArticles.length === 0 ? (
             <div className="gdelt-empty-state">
@@ -631,6 +595,7 @@ export function GdeltIntelligenceFeed({
             processedArticles.map((art) => {
               const isCritical = art.threatLevel === 'Critical';
               const isWarning = art.threatLevel === 'Warning';
+
               return (
                 <div
                   key={art.id}
@@ -681,7 +646,7 @@ export function GdeltIntelligenceFeed({
 
                   <div className="card-footer">
                     <div className="card-domain-info">
-                      <span className="card-domain">{art.domain}</span>
+                      <span className="card-domain">{art.evidence?.publisher || art.domain}</span>
                       <span className="card-time">
                         <Clock size={12} />
                         {art.publishedAt ? new Date(art.publishedAt).toLocaleDateString() : 'Recent'}
@@ -695,30 +660,17 @@ export function GdeltIntelligenceFeed({
                         size="sm"
                         className="assess-btn"
                         onClick={() => setInspectedArticle(art)}
-                        title="View operational impact assessment"
+                        title="View operational evidence assessment"
                       >
                         <Eye size={12} />
                         <span>Assess</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="attach-btn"
-                        onClick={() => {
-                          setSelectedArticleToAttach(art);
-                          if (situations.length > 0) setTargetSituationId(situations[0].id);
-                        }}
-                        title="Attach as verified source evidence to a situation"
-                      >
-                        <FileCheck size={12} />
-                        <span>Attach</span>
                       </Button>
                       <a
                         href={art.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="open-source-link"
-                        title="Open external news article"
+                        title="Open external primary source article"
                       >
                         <ExternalLink size={13} />
                       </a>
@@ -731,16 +683,16 @@ export function GdeltIntelligenceFeed({
         </div>
       )}
 
-      {/* 6. Modal: Full Operational Impact Assessment */}
+      {/* 6. Modal: Operational Evidence Assessment */}
       {inspectedArticle && (
         <Dialog open={!!inspectedArticle} onOpenChange={() => setInspectedArticle(null)}>
-          <DialogContent className="assess-modal-content">
+          <DialogContent className="assess-modal-content max-w-xl">
             <DialogTitle className="assess-modal-title">
-              <ShieldAlert size={18} className="text-red-500 inline mr-2" />
-              Geopolitical Event Impact Assessment
+              <ShieldCheck size={20} className="text-sky-600 inline mr-2" />
+              Operational Evidence Assessment // Active Conflict
             </DialogTitle>
             <DialogDescription>
-              Automated corporate risk assessment for VEON group operating committees.
+              Verified ground-truth report, empirical news lineage, and surveillance scope evaluation.
             </DialogDescription>
 
             <div className="assess-article-box">
@@ -753,111 +705,68 @@ export function GdeltIntelligenceFeed({
                 <span className="text-xs font-mono text-slate-500">
                   Tone: {inspectedArticle.toneScore}
                 </span>
+                {inspectedArticle.isLive && <span className="live-ingest-tag">LIVE FEED</span>}
               </div>
+
               <h4 className="assess-title">{inspectedArticle.title}</h4>
-              <p className="assess-domain-row">
-                Publisher: <strong>{inspectedArticle.domain}</strong> · Country:{' '}
-                {inspectedArticle.sourcecountry} · Date:{' '}
-                {new Date(inspectedArticle.publishedAt).toLocaleString()}
-              </p>
             </div>
 
-            {/* Operational Impact Dimensions */}
-            <div className="impact-dimensions-grid">
-              <div className="impact-col">
-                <span className="impact-col-title">Telecom Infrastructure Vector</span>
-                <p>
-                  Potential risks to power substations, optical core corridors, or regional base transceiver stations. Recommended fuel buffer check.
-                </p>
+            {/* Description Section */}
+            <div className="dossier-section">
+              <div className="dossier-section-header">
+                <FileText size={14} className="text-slate-600" />
+                <h5>DESCRIPTION</h5>
               </div>
-              <div className="impact-col">
-                <span className="impact-col-title">Regulatory & Cross-Border Supply</span>
-                <p>
-                  Assess customs clearance times for hardware replacements and regional roaming transit treaties.
+              <div className="assess-desc-card">
+                <p className="assess-desc-text">
+                  {inspectedArticle.summary || inspectedArticle.evidence?.verbatimExcerpt || inspectedArticle.title}
                 </p>
               </div>
             </div>
 
-            <div className="assess-action-footer">
+            {/* REPORTING LINEAGE & SCOPE Section */}
+            <div className="dossier-section">
+              <div className="dossier-section-header">
+                <Radio size={14} className="text-slate-600" />
+                <h5>REPORTING LINEAGE & SCOPE</h5>
+              </div>
+              <div className="banner-meta-grid bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div>
+                  <span className="meta-lbl">Primary Publisher:</span>
+                  <span className="meta-val">{inspectedArticle.evidence?.publisher || inspectedArticle.domain}</span>
+                </div>
+                <div>
+                  <span className="meta-lbl">Source Domain:</span>
+                  <span className="meta-val">{inspectedArticle.domain}</span>
+                </div>
+                <div>
+                  <span className="meta-lbl">Publication Date:</span>
+                  <span className="meta-val">{new Date(inspectedArticle.publishedAt).toUTCString()}</span>
+                </div>
+                <div>
+                  <span className="meta-lbl">Surveillance Driver:</span>
+                  <span className="meta-val">{inspectedArticle.driver}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Footer with Embedded Link in Button */}
+            <div className="dossier-action-footer">
               <Button
                 variant="outline"
                 onClick={() => setInspectedArticle(null)}
               >
                 Close
               </Button>
-              <Button
-                className="bg-sky-600 hover:bg-sky-700 text-white"
-                onClick={() => {
-                  setSelectedArticleToAttach(inspectedArticle);
-                  if (situations.length > 0) setTargetSituationId(situations[0].id);
-                  setInspectedArticle(null);
-                }}
+              <a
+                href={inspectedArticle.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-md bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition-colors"
               >
-                <FileCheck size={14} className="mr-1.5" />
-                Attach as Source Evidence
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* 7. Modal: Attach to Situation */}
-      {selectedArticleToAttach && (
-        <Dialog open={!!selectedArticleToAttach} onOpenChange={() => setSelectedArticleToAttach(null)}>
-          <DialogContent className="attach-modal-content">
-            <DialogTitle>Attach GDELT Article as Verified Evidence</DialogTitle>
-            <DialogDescription>
-              Promote this open-source intelligence signal into the Situation Register with an immutable audit trail.
-            </DialogDescription>
-
-            <div className="modal-article-preview">
-              <h5>{selectedArticleToAttach.title}</h5>
-              <div className="preview-meta">
-                <span>Domain: {selectedArticleToAttach.domain}</span>
-                <span>Market: {selectedArticleToAttach.market}</span>
-                <span>Driver: {selectedArticleToAttach.driver}</span>
-              </div>
-              <a href={selectedArticleToAttach.url} target="_blank" rel="noreferrer" className="text-xs text-sky-600 underline">
-                {selectedArticleToAttach.url}
+                <ExternalLink size={15} />
+                <span>Open Evidence: {inspectedArticle.evidence?.publisher || inspectedArticle.domain}</span>
               </a>
-            </div>
-
-            <div className="modal-select-section">
-              <label htmlFor="situation-target-select" className="block text-xs font-semibold text-slate-700 mb-1">
-                Select Target Situation in Workspace:
-              </label>
-              <select
-                id="situation-target-select"
-                value={targetSituationId}
-                onChange={(e) => setTargetSituationId(e.target.value)}
-                className="w-full text-sm border rounded p-2 bg-white"
-              >
-                {situations.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    [{s.id}] {s.title} ({s.scope})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {attachSuccess && (
-              <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-md flex items-center gap-2">
-                <CheckCircle2 size={15} className="text-emerald-600" />
-                <span>{attachSuccess}</span>
-              </div>
-            )}
-
-            <div className="modal-action-buttons">
-              <Button variant="outline" onClick={() => setSelectedArticleToAttach(null)} disabled={attaching}>
-                Cancel
-              </Button>
-              <Button
-                className="bg-sky-600 hover:bg-sky-700 text-white"
-                onClick={handleAttachEvidence}
-                disabled={attaching || !targetSituationId}
-              >
-                {attaching ? 'Attaching...' : 'Confirm & Attach Evidence'}
-              </Button>
             </div>
           </DialogContent>
         </Dialog>

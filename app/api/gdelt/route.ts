@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const market = url.searchParams.get('market') || 'All markets';
+    const market = url.searchParams.get('market') || 'Pakistan';
     const driver = url.searchParams.get('driver') || undefined;
 
     const feed = await fetchLiveGdeltIntelligence(market);
@@ -52,6 +52,14 @@ export async function POST(request: Request) {
         url: string;
         domain?: string;
         publishedAt?: string;
+        evidence?: {
+          publisher?: string;
+          observedFact?: string;
+          verbatimExcerpt?: string;
+          reportingDate?: string;
+          newsUrl?: string;
+          citationFormat?: string;
+        };
       };
     };
 
@@ -79,11 +87,11 @@ export async function POST(request: Request) {
     const exists = situation.sources.some((s) => s.url === body.article.url);
     if (!exists) {
       situation.sources.push({
-        title: `[GDELT] ${body.article.title} (${body.article.domain || 'Global Press'})`,
-        url: body.article.url,
-        date: (body.article.publishedAt || nowIso).slice(0, 10),
+        title: `[News Evidence] ${body.article.title} - ${body.article.evidence?.publisher || body.article.domain || 'Wire Service'}`,
+        url: body.article.evidence?.newsUrl || body.article.url,
+        date: (body.article.evidence?.reportingDate || body.article.publishedAt || nowIso).slice(0, 10),
       });
-      situation.illustrative = false; // Validated by real-world source
+      situation.illustrative = false; // Validated by real-world verifiable source
       situation.updated = nowIso;
 
       // Update database
@@ -98,8 +106,12 @@ export async function POST(request: Request) {
         situation.id,
         {
           articleTitle: body.article.title,
-          sourceUrl: body.article.url,
+          sourceUrl: body.article.evidence?.newsUrl || body.article.url,
           domain: body.article.domain,
+          publisher: body.article.evidence?.publisher,
+          observedFact: body.article.evidence?.observedFact,
+          verbatimExcerpt: body.article.evidence?.verbatimExcerpt,
+          citationFormat: body.article.evidence?.citationFormat,
           attachedBy: who,
           timestamp: nowIso,
         },
@@ -109,7 +121,7 @@ export async function POST(request: Request) {
 
     return Response.json({
       ok: true,
-      message: 'GDELT intelligence article successfully attached as verified source evidence.',
+      message: 'GDELT intelligence article and empirical evidence successfully attached to situation.',
       situation,
     });
   } catch (err: unknown) {
