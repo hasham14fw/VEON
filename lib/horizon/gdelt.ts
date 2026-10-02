@@ -40,10 +40,23 @@ export interface GdeltMarketSummary {
   market: string;
   totalEvents: number;
   criticalCount: number;
+  warningCount: number;
   averageTone: number; // -10 to +10
   primaryRiskDriver: string;
   status: 'Elevated' | 'Active Watch' | 'Stable';
   lastUpdated: string;
+  driverBreakdown: Record<string, number>;
+  sentimentBreakdown: {
+    hostilePct: number;
+    neutralPct: number;
+    positivePct: number;
+  };
+  activeHotspots: Array<{
+    city: string;
+    country: string;
+    alerts: number;
+    level: 'Critical' | 'Warning' | 'Elevated';
+  }>;
 }
 
 export interface GdeltIntelligenceFeedResponse {
@@ -390,11 +403,18 @@ export async function fetchLiveGdeltIntelligence(marketFilter: string = 'All mar
 function computeSummary(market: string, articles: GdeltArticle[]): GdeltMarketSummary {
   const count = articles.length;
   const critical = articles.filter((a) => a.threatLevel === 'Critical').length;
+  const warning = articles.filter((a) => a.threatLevel === 'Warning').length;
   const totalTone = articles.reduce((sum, a) => sum + a.toneScore, 0);
   const avgTone = count > 0 ? Number((totalTone / count).toFixed(2)) : 0;
 
   // Tally drivers
-  const driverCounts: Record<string, number> = {};
+  const driverCounts: Record<string, number> = {
+    'Armed conflict': 0,
+    'Energy & infrastructure': 0,
+    'Trade & sanctions': 0,
+    'Technology controls': 0,
+    'Political & regulatory': 0,
+  };
   articles.forEach((a) => {
     driverCounts[a.driver] = (driverCounts[a.driver] || 0) + 1;
   });
@@ -407,17 +427,77 @@ function computeSummary(market: string, articles: GdeltArticle[]): GdeltMarketSu
     }
   }
 
+  // Sentiment Breakdown percentages
+  const hostile = articles.filter((a) => a.toneScore < -2.0).length;
+  const positive = articles.filter((a) => a.toneScore > 2.0).length;
+  const neutral = count - (hostile + positive);
+
+  const hostilePct = count > 0 ? Math.round((hostile / count) * 100) : 0;
+  const positivePct = count > 0 ? Math.round((positive / count) * 100) : 0;
+  const neutralPct = count > 0 ? Math.max(0, 100 - (hostilePct + positivePct)) : 100;
+
+  // Active Regional Hotspots based on market
+  const defaultHotspots: Record<string, Array<{city: string; country: string; alerts: number; level: 'Critical' | 'Warning' | 'Elevated'}>> = {
+    Ukraine: [
+      {city: 'Kyiv', country: 'Ukraine', alerts: 6, level: 'Critical'},
+      {city: 'Kharkiv', country: 'Ukraine', alerts: 4, level: 'Critical'},
+      {city: 'Odesa', country: 'Ukraine', alerts: 3, level: 'Warning'},
+      {city: 'Lviv', country: 'Ukraine', alerts: 2, level: 'Elevated'},
+    ],
+    Pakistan: [
+      {city: 'Peshawar', country: 'Pakistan', alerts: 4, level: 'Warning'},
+      {city: 'Islamabad', country: 'Pakistan', alerts: 3, level: 'Elevated'},
+      {city: 'Karachi', country: 'Pakistan', alerts: 2, level: 'Elevated'},
+      {city: 'Quetta', country: 'Pakistan', alerts: 3, level: 'Warning'},
+    ],
+    Kazakhstan: [
+      {city: 'Aktau (Caspian)', country: 'Kazakhstan', alerts: 3, level: 'Elevated'},
+      {city: 'Astana', country: 'Kazakhstan', alerts: 2, level: 'Elevated'},
+      {city: 'Almaty', country: 'Kazakhstan', alerts: 2, level: 'Elevated'},
+    ],
+    Uzbekistan: [
+      {city: 'Tashkent', country: 'Uzbekistan', alerts: 3, level: 'Elevated'},
+      {city: 'Termez (Border)', country: 'Uzbekistan', alerts: 2, level: 'Warning'},
+    ],
+    Bangladesh: [
+      {city: 'Dhaka', country: 'Bangladesh', alerts: 4, level: 'Warning'},
+      {city: "Cox's Bazar", country: 'Bangladesh', alerts: 3, level: 'Warning'},
+      {city: 'Chittagong', country: 'Bangladesh', alerts: 2, level: 'Elevated'},
+    ],
+    Global: [
+      {city: 'Strait of Hormuz', country: 'Maritime Corridor', alerts: 5, level: 'Critical'},
+      {city: 'Black Sea Basin', country: 'Maritime Corridor', alerts: 4, level: 'Critical'},
+      {city: 'Dubai (OMAE)', country: 'UAE', alerts: 1, level: 'Elevated'},
+    ],
+  };
+
+  const activeHotspots = defaultHotspots[market] || [
+    {city: 'Kyiv & Kharkiv', country: 'Ukraine', alerts: 6, level: 'Critical'},
+    {city: 'Peshawar & LOC', country: 'Pakistan', alerts: 4, level: 'Warning'},
+    {city: 'Aktau / Middle Corridor', country: 'Kazakhstan', alerts: 3, level: 'Elevated'},
+    {city: 'Tashkent Transit', country: 'Uzbekistan', alerts: 2, level: 'Elevated'},
+    {city: 'Dhaka Multi-hub', country: 'Bangladesh', alerts: 3, level: 'Warning'},
+  ];
+
   let status: GdeltMarketSummary['status'] = 'Stable';
   if (critical >= 2 || avgTone < -3.5) status = 'Elevated';
-  else if (articles.some((a) => a.threatLevel === 'Warning') || avgTone < 0) status = 'Active Watch';
+  else if (warning > 0 || avgTone < 0) status = 'Active Watch';
 
   return {
     market,
     totalEvents: count,
     criticalCount: critical,
+    warningCount: warning,
     averageTone: avgTone,
     primaryRiskDriver: primaryDriver,
     status,
     lastUpdated: new Date().toISOString(),
+    driverBreakdown: driverCounts,
+    sentimentBreakdown: {
+      hostilePct,
+      neutralPct,
+      positivePct,
+    },
+    activeHotspots,
   };
 }
