@@ -24,6 +24,7 @@ import {
   Globe,
   Map as MapIcon,
   MapPin,
+  Newspaper,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -57,6 +58,7 @@ import {
   CountryDomains,
   AviationRadar,
   AviationMapsVisualizer,
+  GdeltIntelligenceFeed,
 } from '@/components/horizon-workspace';
 
 const codes: Record<string, string> = {
@@ -276,6 +278,7 @@ export default function Home() {
               ['Overview', LayoutGrid],
               ['Signals', Radio],
               ['Market signals', TrendingUp],
+              ['GDELT Intelligence', Newspaper],
               ['Airspace & No-Fly', Plane],
               ['Google Maps', Globe],
               ['Assessment', Shield],
@@ -662,6 +665,9 @@ export default function Home() {
             <AssessmentDesk key={market + assessmentId} w={w} situations={filtered} initial={assessmentId} />
           )}
           {view === 'Alert queue' && <AlertQueue w={w} situations={filtered} />}
+          {view === 'GDELT Intelligence' && (
+            <GdeltIntelligenceFeed w={w} market={market} situations={all} />
+          )}
           {view === 'Sources & settings' && <SourceRegistry w={w} />}
           {view === 'Validation' && <ValidationLab w={w} />}
 

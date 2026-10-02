@@ -12,3 +12,4 @@ export * from './situation-filters';
 export * from './country-domains';
 export * from './aviation-radar';
 export * from './aviation-maps-visualizer';
+export * from './gdelt-intelligence-feed';
