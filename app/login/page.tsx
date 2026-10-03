@@ -50,9 +50,14 @@ export default function LoginPage() {
     }
   }
 
-  function handleFillDemo() {
-    setUsername('zohair');
-    setPassword('veon12345');
+  function handleFillDemo(account: 'hike' | 'zohair' = 'hike') {
+    if (account === 'hike') {
+      setUsername('hike');
+      setPassword('hike123');
+    } else {
+      setUsername('zohair');
+      setPassword('veon12345');
+    }
     setError('');
   }
 
@@ -212,7 +217,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Remember me & Quick Fill */}
+              {/* Remember me & Quick Fill Options */}
               <div className="options-row-modern">
                 <label className="remember-label-modern">
                   <input
@@ -221,16 +226,28 @@ export default function LoginPage() {
                     onChange={(e) => setRemember(e.target.checked)}
                     disabled={loading}
                   />
-                  <span>Remember me</span>
+                  <span>12h Session</span>
                 </label>
 
-                <button
-                  type="button"
-                  onClick={handleFillDemo}
-                  className="forgot-link-modern"
-                >
-                  Quick Fill (zohair)
-                </button>
+                <div className="flex items-center gap-1.5 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => handleFillDemo('hike')}
+                    className="forgot-link-modern"
+                    title="Fill hike / hike123"
+                  >
+                    hike
+                  </button>
+                  <span className="text-slate-400">·</span>
+                  <button
+                    type="button"
+                    onClick={() => handleFillDemo('zohair')}
+                    className="forgot-link-modern"
+                    title="Fill zohair / veon12345"
+                  >
+                    zohair
+                  </button>
+                </div>
               </div>
 
               {/* Primary Submit Button */}
@@ -241,6 +258,10 @@ export default function LoginPage() {
               >
                 {loading ? 'Authenticating...' : 'Sign in'}
               </button>
+
+              <p className="text-[11px] text-slate-400 text-center mt-3 font-medium">
+                Protected Session · Automated logout after 12 hours
+              </p>
             </form>
           </div>
         </section>

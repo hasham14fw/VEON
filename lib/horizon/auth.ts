@@ -17,21 +17,72 @@ export function parseCookies(cookieHeader: string | null): Record<string, string
   return cookies;
 }
 
-export function createSessionToken(username: string, password: string): string {
-  return btoa(`${username}:${password}`);
+export const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+export const TWELVE_HOURS_SECONDS = 12 * 60 * 60; // 43,200 seconds
+
+export interface UserCredential {
+  username: string;
+  password: string;
+  role: string;
 }
 
-export function credentials(request: Request, config: {HORIZON_USERNAME?: string; HORIZON_PASSWORD?: string}): boolean {
-  const username = config.HORIZON_USERNAME || 'zohair';
-  const password = config.HORIZON_PASSWORD || 'veon12345';
-  const expected = username + ':' + password;
+export function getValidUsers(config?: {HORIZON_USERNAME?: string; HORIZON_PASSWORD?: string}): UserCredential[] {
+  const primaryUser = config?.HORIZON_USERNAME || process.env.HORIZON_USERNAME || 'zohair';
+  const primaryPass = config?.HORIZON_PASSWORD || process.env.HORIZON_PASSWORD || 'veon12345';
+
+  return [
+    {
+      username: primaryUser,
+      password: primaryPass,
+      role: 'Lead Intelligence Operator',
+    },
+    {
+      username: 'hike',
+      password: 'hike123',
+      role: 'Intelligence Analyst',
+    },
+  ];
+}
+
+export function createSessionToken(username: string, password: string, timestamp: number = Date.now()): string {
+  return btoa(`${username}:${password}:${timestamp}`);
+}
+
+export function verifySessionToken(token: string, config?: {HORIZON_USERNAME?: string; HORIZON_PASSWORD?: string}): UserCredential | null {
+  if (!token) return null;
+  try {
+    const decoded = atob(token);
+    const parts = decoded.split(':');
+    const u = parts[0];
+    const p = parts[1];
+    const ts = parts[2] ? Number(parts[2]) : null;
+
+    // Strict 12-hour session lifetime enforcement
+    if (ts && Number.isFinite(ts)) {
+      if (Date.now() - ts > TWELVE_HOURS_MS) {
+        return null; // Expired after 12 hours
+      }
+    }
+
+    const validUsers = getValidUsers(config);
+    const match = validUsers.find((user) => safeCompare(user.username, u) && safeCompare(user.password, p));
+    return match || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getAuthenticatedUser(request: Request, config: {HORIZON_USERNAME?: string; HORIZON_PASSWORD?: string} = env): UserCredential | null {
+  const validUsers = getValidUsers(config);
 
   // 1. Check HTTP Basic Authorization header
   try {
     const header = request.headers.get('authorization') || '';
     if (header.startsWith('Basic ')) {
       const received = atob(header.slice(6));
-      if (safeCompare(received, expected)) return true;
+      const [u, p] = received.split(':');
+      const match = validUsers.find((user) => safeCompare(user.username, u) && safeCompare(user.password, p));
+      if (match) return match;
     }
   } catch {}
 
@@ -41,17 +92,22 @@ export function credentials(request: Request, config: {HORIZON_USERNAME?: string
     const cookies = parseCookies(cookieHeader);
     const sessionToken = cookies['horizon_session'];
     if (sessionToken) {
-      const expectedToken = btoa(expected);
-      if (safeCompare(sessionToken, expectedToken)) return true;
+      const verified = verifySessionToken(sessionToken, config);
+      if (verified) return verified;
     }
   } catch {}
 
-  return false;
+  return null;
 }
 
-export function actor(request: Request) {
-  if (!credentials(request, env)) throw Error('Access denied');
-  return env.HORIZON_USERNAME || 'zohair';
+export function credentials(request: Request, config: {HORIZON_USERNAME?: string; HORIZON_PASSWORD?: string}): boolean {
+  return !!getAuthenticatedUser(request, config);
+}
+
+export function actor(request: Request): string {
+  const user = getAuthenticatedUser(request, env);
+  if (!user) throw Error('Access denied');
+  return user.username;
 }
 
 export function mutationGuard(request: Request) {

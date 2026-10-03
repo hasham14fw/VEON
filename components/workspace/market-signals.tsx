@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Zap,
+  BarChart3,
+  Landmark,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -24,8 +26,19 @@ import {movement, quoteState} from '@/lib/horizon/engine';
 import {BENCHMARK_MARKET_QUOTES, type VeonMarketQuote, type FinnhubTicker} from '@/lib/horizon/finnhub';
 import {Tag, stamp, exportJSON, type Work} from './use-workspace';
 import {WorkspaceStatus} from './workspace-status';
+import {WorldBankSignals} from './world-bank-signals';
+import {FredSignals} from './fred-signals';
 
-export function MarketSignals({w, market}: {w: Work; market: string}) {
+export function MarketSignals({
+  w,
+  market,
+  initialTab = 'prices',
+}: {
+  w: Work;
+  market: string;
+  initialTab?: 'prices' | 'worldbank' | 'fred';
+}) {
+  const [activeTab, setActiveTab] = useState<'prices' | 'worldbank' | 'fred'>(initialTab);
   const [family, setFamily] = useState('All instruments');
   const [picked, setPicked] = useState('USDUAH');
   const [range, setRange] = useState('1M');
@@ -276,7 +289,46 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
 
   return (
     <>
-      <MarketCandidateList w={w} />
+      {/* Institutional Macro Signals Navigation Tabs */}
+      <div className="macro-nav-strip">
+        <div className="macro-nav-tabs">
+          <button
+            type="button"
+            className={`macro-nav-tab ${activeTab === 'prices' ? 'active' : ''}`}
+            onClick={() => setActiveTab('prices')}
+          >
+            <TrendingUp size={15} />
+            <span>Market Prices & Currencies</span>
+            <span className="macro-tab-badge">Finnhub Live</span>
+          </button>
+          <button
+            type="button"
+            className={`macro-nav-tab ${activeTab === 'worldbank' ? 'active' : ''}`}
+            onClick={() => setActiveTab('worldbank')}
+          >
+            <Globe2 size={15} />
+            <span>World Bank Open Data</span>
+            <span className="macro-tab-badge badge-wb">WDI</span>
+          </button>
+          <button
+            type="button"
+            className={`macro-nav-tab ${activeTab === 'fred' ? 'active' : ''}`}
+            onClick={() => setActiveTab('fred')}
+          >
+            <BarChart3 size={15} />
+            <span>Federal Reserve (FRED)</span>
+            <span className="macro-tab-badge badge-fred">St. Louis Fed</span>
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'worldbank' ? (
+        <WorldBankSignals initialMarket={market} />
+      ) : activeTab === 'fred' ? (
+        <FredSignals />
+      ) : (
+        <>
+          <MarketCandidateList w={w} />
 
       {/* =========================================================================
           FINNHUB.IO LIVE MARKET INTEGRATION SECTION
@@ -284,17 +336,7 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
       <section className="panel massive-market-panel">
         <div className="panel-heading massive-panel-heading">
           <div className="massive-title-group">
-            <div className="massive-provider-badge">
-              <Zap size={14} className="zap-icon" />
-              <span>FINNHUB.IO API</span>
-              <span className="live-dot" />
-              <small>LIVE MARKET FEED</small>
-            </div>
             <h2>VEON Operational Market & Currency Monitor</h2>
-            <p>
-              Direct institutional pricing from Finnhub.io REST API and official central bank fixing rates for
-              all 5 VEON operating markets, commodities, and benchmark indices.
-            </p>
           </div>
           <div className="button-row">
             <Button
@@ -337,7 +379,7 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
           </div>
         )}
 
-        {/* Live Market Pair Cards - strictly 6 pairs as requested */}
+        {/* Live Market Pair Cards - compact, highlighted & professional */}
         <div className="massive-cards-grid">
           {filteredFinnhubQuotes.slice(0, 6).map((q) => {
             const isPositive = q.changePercent >= 0;
@@ -348,10 +390,9 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
                 onClick={() => setPicked(q.instrumentId)}
               >
                 <div className="card-top-row">
-                  <div>
+                  <div className="pair-meta-left">
                     <span className="market-tag">{q.market}</span>
                     <strong className="pair-title">{q.name}</strong>
-                    <code className="ticker-code">{q.ticker}</code>
                   </div>
                   <div className={'change-badge ' + (isPositive ? 'up' : 'down')}>
                     {isPositive ? '+' : ''}
@@ -369,30 +410,13 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
                   <span className="unit-label">{q.unit}</span>
                 </div>
 
-                <div className="card-stats-row">
-                  <div>
-                    <small>Open</small>
-                    <span>{q.open ? q.open.toFixed(2) : '—'}</span>
-                  </div>
-                  <div>
-                    <small>High</small>
-                    <span>{q.high ? q.high.toFixed(2) : '—'}</span>
-                  </div>
-                  <div>
-                    <small>Low</small>
-                    <span>{q.low ? q.low.toFixed(2) : '—'}</span>
-                  </div>
-                  <div>
-                    <small>Volume</small>
-                    <span>{q.volume ? q.volume.toLocaleString() : '—'}</span>
-                  </div>
-                </div>
-
-                <div className="card-footer-row">
-                  <span className="as-of-text">
-                    As of: {new Date(q.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                <div className="card-compact-footer">
+                  <span className="compact-hl">
+                    H: {q.high ? q.high.toFixed(2) : '—'} · L: {q.low ? q.low.toFixed(2) : '—'}
                   </span>
-                  {q.cached && <span className="cache-pill">Cached</span>}
+                  <span className="compact-time">
+                    {new Date(q.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                  </span>
                 </div>
               </div>
             );
@@ -729,6 +753,8 @@ export function MarketSignals({w, market}: {w: Work; market: string}) {
           </Button>
         </DialogContent>
       </Dialog>
+        </>
+      )}
     </>
   );
 }

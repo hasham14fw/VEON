@@ -1,5 +1,6 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
+import {verifySessionToken} from '@/lib/horizon/auth';
 
 export function middleware(request: NextRequest) {
   const {pathname} = request.nextUrl;
@@ -17,15 +18,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Validate horizon_session cookie
+  // 2. Validate horizon_session cookie with multi-user & 12-hour expiration check
   const sessionCookie = request.cookies.get('horizon_session');
-  const validUser = process.env.HORIZON_USERNAME || 'zohair';
-  const validPass = process.env.HORIZON_PASSWORD || 'veon12345';
-  const expectedToken = btoa(`${validUser}:${validPass}`);
-
-  const isAuthenticated = sessionCookie?.value
-    ? decodeURIComponent(sessionCookie.value) === expectedToken || sessionCookie.value === expectedToken
-    : false;
+  const cookieVal = sessionCookie?.value ? decodeURIComponent(sessionCookie.value) : '';
+  const authenticatedUser = cookieVal ? verifySessionToken(cookieVal) : null;
+  const isAuthenticated = !!authenticatedUser;
 
   // 3. Unauthenticated access -> redirect to /login
   if (!isAuthenticated) {
@@ -36,7 +33,12 @@ export function middleware(request: NextRequest) {
       return NextResponse.json({error: 'Authentication required'}, {status: 401});
     }
     const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    // Remove expired or invalid cookie on redirect
+    if (sessionCookie) {
+      response.cookies.delete('horizon_session');
+    }
+    return response;
   }
 
   // 4. Authenticated user visiting /login -> redirect to main workspace /

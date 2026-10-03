@@ -13,3 +13,6 @@ export * from './country-domains';
 export * from './aviation-radar';
 export * from './aviation-maps-visualizer';
 export * from './gdelt-intelligence-feed';
+export * from './ai-strategic-decisions';
+export * from './ai-analyst-desk';
+export * from './early-warnings-desk';

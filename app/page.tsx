@@ -25,6 +25,7 @@ import {
   Map as MapIcon,
   MapPin,
   Newspaper,
+  Brain,
 } from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -59,6 +60,8 @@ import {
   AviationRadar,
   AviationMapsVisualizer,
   GdeltIntelligenceFeed,
+  EarlyWarningsDesk,
+  AiAnalystDesk,
 } from '@/components/horizon-workspace';
 
 const codes: Record<string, string> = {
@@ -70,14 +73,14 @@ const codes: Record<string, string> = {
   Global: 'GL',
 };
 
-// Highlighted executive Blue palette: distinct shades of blue for Situation landscape matrix
+// Refined executive palette: subtle pastel transitions optimized for ultra-modern white theme
 function matrixColor(x: number, y: number) {
   const bluePalette = [
-    '#EDF5FF',   // Sum 0: Low disruption / short duration (soft icy blue tint)
-    '#DBEAFE',   // Sum 1: Moderate (clear light sky blue)
-    '#BFDBFE',   // Sum 2: Significant / medium (crisp azure blue)
-    '#93C5FD',   // Sum 3: Warning / elevated (vibrant cerulean blue)
-    '#60A5FA',   // Sum 4: Structural / prolonged (bold highlighted royal blue)
+    '#F8FAFC',   // Sum 0: Clean baseline off-white/slate
+    '#F0F7FF',   // Sum 1: Soft light azure tint
+    '#E0F2FE',   // Sum 2: Crisp light sky blue
+    '#BAE6FD',   // Sum 3: Warning elevated blue
+    '#7DD3FC',   // Sum 4: High structural blue
   ];
   return bluePalette[x + y - 2] || bluePalette[0];
 }
@@ -279,6 +282,8 @@ export default function Home() {
               ['Signals', Radio],
               ['Market signals', TrendingUp],
               ['Active Conflict', Newspaper],
+              ['Early Warnings', AlertTriangle],
+              ['AI Analyst', Brain],
               ['Airspace & No-Fly', Plane],
               ['Google Maps', Globe],
               ['Assessment', Shield],
@@ -363,108 +368,103 @@ export default function Home() {
         </header>
 
         <div className="workspace">
-          {/* Page Heading & Tactical Action Strip */}
-          <div className="page-heading">
-            <div>
-              <h1>
-                {view === 'Overview'
-                  ? market === 'All markets'
-                    ? 'Global perspective. Local exposure.'
-                    : market + ' perspective.'
-                  : view}
-              </h1>
-              {view === 'Overview' && (
-                <p>Real-time geopolitical early-warning, scenario stress-testing, and automated risk correlation.</p>
-              )}
-            </div>
-            <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-              <Button
-                variant="outline"
-                className="maps-quick-btn"
-                onClick={() => setView('Google Maps')}
-                title="Visualize No-Fly Zones on Google Maps"
-              >
-                <MapPin size={15} style={{color: '#DC2626'}} />
-                <span>Google Maps</span>
-                <span className="maps-btn-badge" style={{background: '#DC2626', color: '#FFF'}}>7 RED NFZ</span>
-              </Button>
-              <Button className="primary-add-btn" onClick={() => setEditing(blankSituation())}>
-                <Plus size={16} />
-                <span>Add situation</span>
-              </Button>
-            </div>
-          </div>
-
           {notice && (
-            <div className="notice" role="status">
+            <div className="notice mb-4" role="status">
               <Check size={15} />
               <span>{notice}</span>
               <button onClick={() => setNotice('')}>Dismiss</button>
             </div>
           )}
 
-          {/* KPI Metrics Strip with glowing containers */}
-          <div className="metrics">
-            <div className="metric-card metric-card-blue">
-              <div className="metric-header">
-                <span>Situations in view</span>
-                <div className="metric-icon-wrap">
-                  <Layers size={14} />
-                </div>
-              </div>
-              <strong>{filtered.length.toString().padStart(2, '0')}</strong>
-              <small>
-                {filtered.filter((s) => s.scope === 'Global').length} global ·{' '}
-                {filtered.filter((s) => s.scope !== 'Global').length} market-specific
-              </small>
-            </div>
-
-            <div className="metric-card metric-card-rose">
-              <div className="metric-header">
-                <span>Leadership attention</span>
-                <div className="metric-icon-wrap">
-                  <AlertTriangle size={14} />
-                </div>
-              </div>
-              <strong>
-                {filtered.filter((s) => s.status === 'Escalate').length.toString().padStart(2, '0')}
-                <ArrowUpRight size={16} style={{color: '#EF4444'}} />
-              </strong>
-              <small>Critical cases flagged for executive escalation</small>
-            </div>
-
-            <div className="metric-card metric-card-amber">
-              <div className="metric-header">
-                <span>Markets covered</span>
-                <div className="metric-icon-wrap">
-                  <Globe2 size={14} />
-                </div>
-              </div>
-              <strong>
-                {new Set(filtered.flatMap((s) => s.markets)).size}
-                <span className="metric-denominator"> / 5</span>
-              </strong>
-              <small>Unified cross-border early-warning grid</small>
-            </div>
-
-            <div className="metric-card metric-card-emerald">
-              <div className="metric-header">
-                <span>Evidence coverage</span>
-                <div className="metric-icon-wrap">
-                  <ShieldCheck size={14} />
-                </div>
-              </div>
-              <strong>
-                {filtered.filter((s) => !s.illustrative && s.sources.length > 0).length.toString().padStart(2, '0')}
-                <ShieldCheck size={16} style={{color: '#10B981'}} />
-              </strong>
-              <small>Verified sources attached with lineage</small>
-            </div>
-          </div>
-
           {/* VIEW: OVERVIEW */}
           {view === 'Overview' && (
             <>
+              {/* Page Heading & Tactical Action Strip */}
+              <div className="page-heading">
+                <div>
+                  <h1>
+                    {market === 'All markets'
+                      ? 'Global perspective. Local exposure.'
+                      : market + ' perspective.'}
+                  </h1>
+                  <p>Real-time geopolitical early-warning, scenario stress-testing, and automated risk correlation.</p>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                  <Button
+                    variant="outline"
+                    className="maps-quick-btn"
+                    onClick={() => setView('Google Maps')}
+                    title="Visualize No-Fly Zones on Google Maps"
+                  >
+                    <MapPin size={15} style={{color: '#DC2626'}} />
+                    <span>Google Maps</span>
+                    <span className="maps-btn-badge" style={{background: '#DC2626', color: '#FFF'}}>7 RED NFZ</span>
+                  </Button>
+                  <Button className="primary-add-btn" onClick={() => setEditing(blankSituation())}>
+                    <Plus size={16} />
+                    <span>Add situation</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* KPI Metrics Strip with glowing containers */}
+              <div className="metrics">
+                <div className="metric-card metric-card-blue">
+                  <div className="metric-header">
+                    <span>Situations in view</span>
+                    <div className="metric-icon-wrap">
+                      <Layers size={14} />
+                    </div>
+                  </div>
+                  <strong>{filtered.length.toString().padStart(2, '0')}</strong>
+                  <small>
+                    {filtered.filter((s) => s.scope === 'Global').length} global ·{' '}
+                    {filtered.filter((s) => s.scope !== 'Global').length} market-specific
+                  </small>
+                </div>
+
+                <div className="metric-card metric-card-rose">
+                  <div className="metric-header">
+                    <span>Leadership attention</span>
+                    <div className="metric-icon-wrap">
+                      <AlertTriangle size={14} />
+                    </div>
+                  </div>
+                  <strong>
+                    {filtered.filter((s) => s.status === 'Escalate').length.toString().padStart(2, '0')}
+                    <ArrowUpRight size={16} style={{color: '#EF4444'}} />
+                  </strong>
+                  <small>Critical cases flagged for executive escalation</small>
+                </div>
+
+                <div className="metric-card metric-card-amber">
+                  <div className="metric-header">
+                    <span>Markets covered</span>
+                    <div className="metric-icon-wrap">
+                      <Globe2 size={14} />
+                    </div>
+                  </div>
+                  <strong>
+                    {new Set(filtered.flatMap((s) => s.markets)).size}
+                    <span className="metric-denominator"> / 5</span>
+                  </strong>
+                  <small>Unified cross-border early-warning grid</small>
+                </div>
+
+                <div className="metric-card metric-card-emerald">
+                  <div className="metric-header">
+                    <span>Evidence coverage</span>
+                    <div className="metric-icon-wrap">
+                      <ShieldCheck size={14} />
+                    </div>
+                  </div>
+                  <strong>
+                    {filtered.filter((s) => !s.illustrative && s.sources.length > 0).length.toString().padStart(2, '0')}
+                    <ShieldCheck size={16} style={{color: '#10B981'}} />
+                  </strong>
+                  <small>Verified sources attached with lineage</small>
+                </div>
+              </div>
               <SituationFilters value={filters} onChange={setFilters} />
               <CountryDomains w={w} situations={filtered} market={market} />
 
@@ -667,6 +667,12 @@ export default function Home() {
           {view === 'Alert queue' && <AlertQueue w={w} situations={filtered} />}
           {view === 'Active Conflict' && (
             <GdeltIntelligenceFeed w={w} market={market === 'All markets' ? 'Pakistan' : market} situations={all} />
+          )}
+          {view === 'Early Warnings' && (
+            <EarlyWarningsDesk w={w} market={market === 'All markets' ? 'Pakistan' : market} situations={all} />
+          )}
+          {view === 'AI Analyst' && (
+            <AiAnalystDesk w={w} market={market === 'All markets' ? 'Pakistan' : market} situations={all} />
           )}
           {view === 'Sources & settings' && <SourceRegistry w={w} />}
           {view === 'Validation' && <ValidationLab w={w} />}

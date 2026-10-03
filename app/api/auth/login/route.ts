@@ -1,6 +1,6 @@
 import {env} from '@/lib/horizon/env';
 import {z} from 'zod';
-import {safeCompare, createSessionToken} from '@/lib/horizon/auth';
+import {safeCompare, createSessionToken, getValidUsers, TWELVE_HOURS_SECONDS} from '@/lib/horizon/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,21 +13,21 @@ const loginSchema = z.object({
 export async function POST(request: Request) {
   try {
     const config = env as unknown as {HORIZON_USERNAME?: string; HORIZON_PASSWORD?: string};
-    const validUsername = config.HORIZON_USERNAME || 'zohair';
-    const validPassword = config.HORIZON_PASSWORD || 'veon12345';
+    const validUsers = getValidUsers(config);
 
     const body = loginSchema.parse(await request.json());
 
-    const isUserMatch = safeCompare(body.username, validUsername);
-    const isPassMatch = safeCompare(body.password, validPassword);
+    const matchedUser = validUsers.find(
+      (u) => safeCompare(body.username, u.username) && safeCompare(body.password, u.password)
+    );
 
-    if (!isUserMatch || !isPassMatch) {
+    if (!matchedUser) {
       return Response.json({error: 'Invalid username or password'}, {status: 401});
     }
 
-    const token = createSessionToken(validUsername, validPassword);
-    // 30 days if remember is true, else 24 hours
-    const maxAge = body.remember ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
+    const token = createSessionToken(matchedUser.username, matchedUser.password);
+    // Strict 12-hour session expiration (43,200 seconds)
+    const maxAge = TWELVE_HOURS_SECONDS;
 
     const headers = new Headers();
     headers.set(
@@ -40,8 +40,8 @@ export async function POST(request: Request) {
       JSON.stringify({
         ok: true,
         user: {
-          username: validUsername,
-          role: 'Intelligence Operator',
+          username: matchedUser.username,
+          role: matchedUser.role,
         },
       }),
       {status: 200, headers}
