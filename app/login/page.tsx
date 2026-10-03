@@ -5,6 +5,8 @@ import {
   Lock,
   User,
   AlertTriangle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -199,8 +201,10 @@ export default function LoginPage() {
                   tabIndex={-1}
                   className="show-toggle-modern"
                   onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? 'HIDE' : 'SHOW'}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
 

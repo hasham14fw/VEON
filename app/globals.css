@@ -1790,7 +1790,7 @@ form>label, fieldset>label, .h-form label {
   margin: 16px 0;
 }
 
-form input, form textarea, form select, .h-form input, .h-form textarea, .h-form select {
+form:not(.login-form-modern) input, form:not(.login-form-modern) textarea, form:not(.login-form-modern) select, .h-form input, .h-form textarea, .h-form select {
   margin-top: 6px;
   background: #FFFFFF !important;
   color: #0F172A !important;
@@ -1802,7 +1802,7 @@ form input, form textarea, form select, .h-form input, .h-form textarea, .h-form
   transition: border-color 0.15s ease;
 }
 
-form input:focus, form textarea:focus, form select:focus {
+form:not(.login-form-modern) input:focus, form:not(.login-form-modern) textarea:focus, form:not(.login-form-modern) select:focus {
   border-color: #007FC1 !important;
   outline: 2px solid rgba(0, 127, 193, 0.2) !important;
 }
@@ -2758,12 +2758,17 @@ legend {
   margin-right: 10px;
 }
 
-.input-field-modern input {
-  width: 100%;
+.input-field-modern input,
+.login-form-modern .input-field-modern input,
+.login-form-modern .input-field-modern input:focus,
+.login-form-modern .input-field-modern input:active {
+  width: 100% !important;
   border: none !important;
   background: transparent !important;
   padding: 0 !important;
-  font-size: 13.5px;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  font-size: 13.5px !important;
   color: #0F172A !important;
   outline: none !important;
   box-shadow: none !important;
@@ -2773,20 +2778,29 @@ legend {
   color: #94A3B8;
 }
 
+/* Suppress browser native password reveal button to eliminate duplicate reveal icons */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 .show-toggle-modern {
   background: transparent;
   border: none;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  color: #1E293B;
+  color: #64748B;
   padding: 4px 6px;
   cursor: pointer;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
 }
 
 .show-toggle-modern:hover {
-  color: #D97706;
+  color: #1E293B;
 }
 
 .options-row-modern {
