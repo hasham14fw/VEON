@@ -37,8 +37,8 @@ export function getValidUsers(config?: {HORIZON_USERNAME?: string; HORIZON_PASSW
       role: 'Lead Intelligence Operator',
     },
     {
-      username: 'hike',
-      password: 'hike123',
+      username: 'haik',
+      password: 'haik123',
       role: 'Intelligence Analyst',
     },
   ];

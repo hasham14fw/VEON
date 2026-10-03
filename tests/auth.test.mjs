@@ -26,13 +26,13 @@ const {
   TWELVE_HOURS_SECONDS,
 } = await import('../.sites-runtime/tests/auth.mjs');
 
-test('getValidUsers includes primary operator and hike accounts', () => {
+test('getValidUsers includes primary operator and haik accounts', () => {
   const users = getValidUsers();
   assert(users.length >= 2, 'Must have at least 2 valid accounts');
   
-  const hike = users.find((u) => u.username === 'hike');
-  assert(hike, 'hike account must exist');
-  assert.equal(hike.password, 'hike123');
+  const haik = users.find((u) => u.username === 'haik');
+  assert(haik, 'haik account must exist');
+  assert.equal(haik.password, 'haik123');
 
   const zohair = users.find((u) => u.username === 'zohair');
   assert(zohair, 'zohair account must exist');
@@ -44,11 +44,11 @@ test('Session timeout is configured strictly to 12 hours (43,200s)', () => {
   assert.equal(TWELVE_HOURS_MS, 12 * 60 * 60 * 1000);
 });
 
-test('verifySessionToken authenticates hike:hike123 successfully', () => {
-  const token = createSessionToken('hike', 'hike123');
+test('verifySessionToken authenticates haik:haik123 successfully', () => {
+  const token = createSessionToken('haik', 'haik123');
   const user = verifySessionToken(token);
-  assert(user, 'Session verification for hike must succeed');
-  assert.equal(user.username, 'hike');
+  assert(user, 'Session verification for haik must succeed');
+  assert.equal(user.username, 'haik');
   assert.equal(user.role, 'Intelligence Analyst');
 });
 
@@ -60,34 +60,34 @@ test('verifySessionToken authenticates zohair:veon12345 successfully', () => {
 });
 
 test('verifySessionToken rejects invalid password or unknown user', () => {
-  const badPassToken = createSessionToken('hike', 'wrongpassword');
+  const badPassToken = createSessionToken('haik', 'wrongpassword');
   assert.equal(verifySessionToken(badPassToken), null);
 
-  const badUserToken = createSessionToken('intruder', 'hike123');
+  const badUserToken = createSessionToken('intruder', 'haik123');
   assert.equal(verifySessionToken(badUserToken), null);
 });
 
 test('verifySessionToken rejects tokens older than 12 hours (session expiration)', () => {
   const now = Date.now();
   // Valid token created 1 hour ago
-  const validToken = createSessionToken('hike', 'hike123', now - 3600000);
+  const validToken = createSessionToken('haik', 'haik123', now - 3600000);
   assert(verifySessionToken(validToken), '1-hour old token should still be valid');
 
   // Expired token created 12.1 hours ago
   const expiredTime = now - (TWELVE_HOURS_MS + 60000);
-  const expiredToken = createSessionToken('hike', 'hike123', expiredTime);
+  const expiredToken = createSessionToken('haik', 'haik123', expiredTime);
   assert.equal(verifySessionToken(expiredToken), null, 'Token older than 12 hours must be expired and rejected');
 });
 
-test('credentials verifies HTTP Basic and Cookie headers for hike and zohair', () => {
-  // Test Basic auth for hike
+test('credentials verifies HTTP Basic and Cookie headers for haik and zohair', () => {
+  // Test Basic auth for haik
   const basicReq = new Request('https://horizon.veon.com/api/test', {
     headers: {
-      Authorization: `Basic ${btoa('hike:hike123')}`,
+      Authorization: `Basic ${btoa('haik:haik123')}`,
     },
   });
   assert.equal(credentials(basicReq, {}), true);
-  assert.equal(actor(basicReq), 'hike');
+  assert.equal(actor(basicReq), 'haik');
 
   // Test Cookie auth for zohair
   const cookieToken = createSessionToken('zohair', 'veon12345');
@@ -99,13 +99,13 @@ test('credentials verifies HTTP Basic and Cookie headers for hike and zohair', (
   assert.equal(credentials(cookieReq, {}), true);
   assert.equal(actor(cookieReq), 'zohair');
 
-  // Test Cookie auth for hike
-  const hikeCookieToken = createSessionToken('hike', 'hike123');
-  const hikeCookieReq = new Request('https://horizon.veon.com/api/test', {
+  // Test Cookie auth for haik
+  const haikCookieToken = createSessionToken('haik', 'haik123');
+  const haikCookieReq = new Request('https://horizon.veon.com/api/test', {
     headers: {
-      Cookie: `horizon_session=${encodeURIComponent(hikeCookieToken)}`,
+      Cookie: `horizon_session=${encodeURIComponent(haikCookieToken)}`,
     },
   });
-  assert.equal(credentials(hikeCookieReq, {}), true);
-  assert.equal(actor(hikeCookieReq), 'hike');
+  assert.equal(credentials(haikCookieReq, {}), true);
+  assert.equal(actor(haikCookieReq), 'haik');
 });
