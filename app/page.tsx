@@ -23,7 +23,6 @@ import {
   X,
   Globe,
   Map as MapIcon,
-  MapPin,
   Newspaper,
   Brain,
 } from 'lucide-react';
@@ -130,13 +129,20 @@ export default function Home() {
   const [notice, setNotice] = useState('');
   const [showExamples, setShowExamples] = useState(true);
   const [cell, setCell] = useState<string | null>(null);
-  const [utcTime, setUtcTime] = useState('');
+  const [dubaiTime, setDubaiTime] = useState('');
 
-  // Live real-time surveillance clock in UTC
+  // Live real-time surveillance clock in Dubai (GST / UTC+4)
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setUtcTime(now.toUTCString().slice(17, 25) + ' UTC');
+      const timeStr = now.toLocaleTimeString('en-GB', {
+        timeZone: 'Asia/Dubai',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+      setDubaiTime(`${timeStr} GST (Dubai)`);
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -350,7 +356,7 @@ export default function Home() {
           <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
             <div className="topbar-telemetry">
               <span className="beacon-pulse" />
-              <span>LIVE FEED · {utcTime || 'SYNCHRONIZING'}</span>
+              <span>LIVE FEED · {dubaiTime || 'SYNCHRONIZING'}</span>
             </div>
             <button
               type="button"
@@ -390,16 +396,6 @@ export default function Home() {
                   <p>Real-time geopolitical early-warning, scenario stress-testing, and automated risk correlation.</p>
                 </div>
                 <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                  <Button
-                    variant="outline"
-                    className="maps-quick-btn"
-                    onClick={() => setView('Google Maps')}
-                    title="Visualize No-Fly Zones on Google Maps"
-                  >
-                    <MapPin size={15} style={{color: '#DC2626'}} />
-                    <span>Google Maps</span>
-                    <span className="maps-btn-badge" style={{background: '#DC2626', color: '#FFF'}}>7 RED NFZ</span>
-                  </Button>
                   <Button className="primary-add-btn" onClick={() => setEditing(blankSituation())}>
                     <Plus size={16} />
                     <span>Add situation</span>

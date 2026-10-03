@@ -8,9 +8,8 @@ import {
 } from 'lucide-react';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('zohair');
-  const [password, setPassword] = useState('veon12345');
-  const [remember, setRemember] = useState(true);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,7 +31,6 @@ export default function LoginPage() {
         body: JSON.stringify({
           username: username.trim(),
           password: password.trim(),
-          remember,
         }),
       });
 
@@ -48,17 +46,6 @@ export default function LoginPage() {
       setError((err as Error).message || 'Authentication failed.');
       setLoading(false);
     }
-  }
-
-  function handleFillDemo(account: 'hike' | 'zohair' = 'hike') {
-    if (account === 'hike') {
-      setUsername('hike');
-      setPassword('hike123');
-    } else {
-      setUsername('zohair');
-      setPassword('veon12345');
-    }
-    setError('');
   }
 
   return (
@@ -217,39 +204,6 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Remember me & Quick Fill Options */}
-              <div className="options-row-modern">
-                <label className="remember-label-modern">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                    disabled={loading}
-                  />
-                  <span>12h Session</span>
-                </label>
-
-                <div className="flex items-center gap-1.5 text-xs font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('hike')}
-                    className="forgot-link-modern"
-                    title="Fill hike / hike123"
-                  >
-                    hike
-                  </button>
-                  <span className="text-slate-400">·</span>
-                  <button
-                    type="button"
-                    onClick={() => handleFillDemo('zohair')}
-                    className="forgot-link-modern"
-                    title="Fill zohair / veon12345"
-                  >
-                    zohair
-                  </button>
-                </div>
-              </div>
-
               {/* Primary Submit Button */}
               <button
                 type="submit"
@@ -258,10 +212,6 @@ export default function LoginPage() {
               >
                 {loading ? 'Authenticating...' : 'Sign in'}
               </button>
-
-              <p className="text-[11px] text-slate-400 text-center mt-3 font-medium">
-                Protected Session · Automated logout after 12 hours
-              </p>
             </form>
           </div>
         </section>
