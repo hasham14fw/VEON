@@ -2778,31 +2778,6 @@ legend {
   color: #94A3B8;
 }
 
-/* Suppress browser native password reveal button to eliminate duplicate reveal icons */
-input::-ms-reveal,
-input::-ms-clear {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-.show-toggle-modern {
-  background: transparent;
-  border: none;
-  color: #64748B;
-  padding: 4px 6px;
-  cursor: pointer;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s ease;
-}
-
-.show-toggle-modern:hover {
-  color: #1E293B;
-}
-
 .options-row-modern {
   display: flex;
   align-items: center;

@@ -5,14 +5,11 @@ import {
   Lock,
   User,
   AlertTriangle,
-  Eye,
-  EyeOff,
 } from 'lucide-react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -188,7 +185,7 @@ export default function LoginPage() {
                 <Lock size={18} className="field-icon-modern" />
                 <input
                   id="login-password"
-                  type={showPassword ? 'text' : 'password'}
+                  type="password"
                   required
                   autoComplete="current-password"
                   placeholder="Password"
@@ -196,16 +193,6 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
                 />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  className="show-toggle-modern"
-                  onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
               </div>
 
               {/* Primary Submit Button */}
