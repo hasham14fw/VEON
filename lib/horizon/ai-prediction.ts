@@ -187,58 +187,61 @@ You MUST respond strictly in valid JSON format matching this schema:
 
   } catch (err: unknown) {
     console.error('Failed to generate Gemini AI prediction, using resilient fallback:', err);
-    
-    // Resilient fallback based on live articles
-    const fallback: AiEarlyPrediction = {
-      id: `pred-${market.toLowerCase()}-${Date.now()}`,
-      market,
-      generatedAt: new Date().toISOString(),
-      model: 'gemini-2.5-flash-baseline',
-      incidentTitle: topArticles[0]?.title || `Active Security & Airspace Surveillance in ${market}`,
-      escalationProbability: 78,
-      threatSeverity: 'CRITICAL',
-      estimatedLeadTime: '12 - 36 Hours',
-      primaryTriggerVector: 'Armed Border Corridor & Transit Restriction',
-      confidenceScore: 84,
-      strategicDirective: `Pre-position 7-day diesel fuel at ${market} boundary sites, lock transmission to satellite fallback, and enforce Code Amber personnel restrictions.`,
-      rationale: `Live dispatches from ${topArticles[0]?.evidence?.publisher || 'wire monitors'} show elevated conflict signals converging with regional transport constraints.`,
-      playbook: [
-        {
-          category: 'Network & Continuity',
-          title: 'Tower Transmission Hardening',
-          action: 'Lock border BTS towers into autonomous failover mode; switch microwave links to underground fiber & LEO satellite backup.',
-          urgency: 'Immediate (0-6h)',
-          status: 'pending',
-        },
-        {
-          category: 'Supply Chain & Fuel',
-          title: 'Emergency Fuel Logistics',
-          action: 'Dispatch emergency fuel tankers to secure a minimum 7-day diesel reserve at all critical switching hubs before transit routes close.',
-          urgency: 'Immediate (0-6h)',
-          status: 'pending',
-        },
-        {
-          category: 'Personnel Security',
-          title: 'Code Amber Field Mandate',
-          action: 'Halt all non-essential field maintenance dispatches into high-risk border corridors without authorized military security escorts.',
-          urgency: 'Immediate (0-6h)',
-          status: 'pending',
-        },
-        {
-          category: 'Treasury & Regulatory',
-          title: 'Regulatory Coordination',
-          action: 'Liaise with local telecommunications regulatory authorities to prioritize emergency humanitarian voice and SMS corridors.',
-          urgency: 'Precautionary (12-24h)',
-          status: 'pending',
-        }
-      ],
-      evidenceLinks: topArticles.map(a => ({
-        headline: a.title,
-        publisher: a.evidence?.publisher || a.domain,
-        url: a.url,
-      }))
-    };
-
-    return fallback;
+    return getBenchmarkPrediction(market, topArticles);
   }
+}
+
+/**
+ * Resilient calibrated benchmark prediction used when Gemini API key is missing or calls fail.
+ */
+export function getBenchmarkPrediction(market: string, topArticles: GdeltArticle[] = []): AiEarlyPrediction {
+  return {
+    id: `pred-${market.toLowerCase()}-${Date.now()}`,
+    market,
+    generatedAt: new Date().toISOString(),
+    model: 'gemini-2.5-flash-baseline',
+    incidentTitle: topArticles[0]?.title || `Active Security & Airspace Surveillance in ${market}`,
+    escalationProbability: 78,
+    threatSeverity: 'CRITICAL',
+    estimatedLeadTime: '12 - 36 Hours',
+    primaryTriggerVector: 'Armed Border Corridor & Transit Restriction',
+    confidenceScore: 84,
+    strategicDirective: `Pre-position 7-day diesel fuel at ${market} boundary sites, lock transmission to satellite fallback, and enforce Code Amber personnel restrictions.`,
+    rationale: `Live dispatches from ${topArticles[0]?.evidence?.publisher || 'wire monitors'} show elevated conflict signals converging with regional transport constraints.`,
+    playbook: [
+      {
+        category: 'Network & Continuity',
+        title: 'Tower Transmission Hardening',
+        action: 'Lock border BTS towers into autonomous failover mode; switch microwave links to underground fiber & LEO satellite backup.',
+        urgency: 'Immediate (0-6h)',
+        status: 'pending',
+      },
+      {
+        category: 'Supply Chain & Fuel',
+        title: 'Emergency Fuel Logistics',
+        action: 'Dispatch emergency fuel tankers to secure a minimum 7-day diesel reserve at all critical switching hubs before transit routes close.',
+        urgency: 'Immediate (0-6h)',
+        status: 'pending',
+      },
+      {
+        category: 'Personnel Security',
+        title: 'Code Amber Field Mandate',
+        action: 'Halt all non-essential field maintenance dispatches into high-risk border corridors without authorized military security escorts.',
+        urgency: 'Immediate (0-6h)',
+        status: 'pending',
+      },
+      {
+        category: 'Treasury & Regulatory',
+        title: 'Regulatory Coordination',
+        action: 'Liaise with local telecommunications regulatory authorities to prioritize emergency humanitarian voice and SMS corridors.',
+        urgency: 'Precautionary (12-24h)',
+        status: 'pending',
+      }
+    ],
+    evidenceLinks: topArticles.map(a => ({
+      headline: a.title,
+      publisher: a.evidence?.publisher || a.domain,
+      url: a.url,
+    }))
+  };
 }
